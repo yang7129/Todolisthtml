@@ -1,0 +1,4857 @@
+<!DOCTYPE html>
+
+<html lang="zh-TW" data-theme="light">
+
+<head>
+
+<meta charset="utf-8">
+
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>Todolisthtml</title>
+
+<style>
+
+:root{
+
+  --bg:#f4f6f8; --panel:#ffffff; --panel2:#fafbfc; --line:#e2e6ea;
+
+  --text:#1f2328; --muted:#6b7280; --faint:#9aa3ad;
+
+  --accent:#2563eb; --accent-soft:#e8f0fe; --accent-text:#fff;
+
+  --ok:#16a34a; --danger:#dc2626; --warn:#d97706;
+
+  --p0:#94a3b8; --p1:#3b82f6; --p2:#f59e0b; --p3:#ef4444;
+
+  --shadow:0 2px 10px rgba(0,0,0,.08); --radius:8px;
+
+}
+
+html[data-theme="dark"]{
+
+  --bg:#14171a; --panel:#1c2024; --panel2:#22272c; --line:#2e343a;
+
+  --text:#e6e9ec; --muted:#9aa3ad; --faint:#6b7280;
+
+  --accent:#4b8bf5; --accent-soft:#22304a; --accent-text:#fff;
+
+  --ok:#3fbf6b; --danger:#f05555; --warn:#e0a030;
+
+  --shadow:0 2px 12px rgba(0,0,0,.4);
+
+}
+
+*{box-sizing:border-box}
+
+html,body{height:100%}
+
+body{margin:0;background:var(--bg);color:var(--text);
+
+  font:14px/1.55 "Segoe UI","Microsoft JhengHei",-apple-system,"Noto Sans TC",sans-serif;
+
+  overflow:hidden}
+
+button,input,select,textarea{font:inherit;color:inherit}
+
+button{cursor:pointer;background:none;border:none}
+
+input,select,textarea{background:var(--panel);border:1px solid var(--line);
+
+  border-radius:6px;padding:6px 9px;outline:none}
+
+input:focus,select:focus,textarea:focus{border-color:var(--accent)}
+
+.btn{border:1px solid var(--line);background:var(--panel);border-radius:6px;
+
+  padding:6px 11px;white-space:nowrap;transition:.12s}
+
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-text)}
+
+.btn.primary:hover{filter:brightness(1.1);color:var(--accent-text)}
+
+.btn.ghost{border-color:transparent}
+
+.btn.ghost:hover{background:var(--panel2)}
+
+.btn:disabled{opacity:.4;cursor:default;border-color:var(--line);color:var(--muted)}
+
+.icon{width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;
+
+  border-radius:6px;font-size:15px}
+
+.icon:hover{background:var(--panel2)}
+
+ 
+
+/* ---------- 版面 ---------- */
+
+#app{display:flex;height:100vh}
+
+#side{width:230px;flex:0 0 230px;background:var(--panel);border-right:1px solid var(--line);
+
+  display:flex;flex-direction:column;overflow:hidden}
+
+#side .brand{padding:14px 16px 10px;font-weight:700;letter-spacing:.3px;
+
+  display:flex;align-items:baseline;justify-content:space-between}
+
+#side .brand small{font-weight:400;color:var(--faint);font-size:11px}
+
+#navs{flex:1;overflow:auto;padding:0 8px 8px}
+
+.navgroup h4{margin:10px 8px 4px;font-size:11px;color:var(--faint);font-weight:600;
+
+  letter-spacing:.6px;display:flex;justify-content:space-between;align-items:center}
+
+.navgroup h4 button{font-size:14px;color:var(--faint);padding:0 4px;border-radius:4px}
+
+.navgroup h4 button:hover{color:var(--accent);background:var(--panel2)}
+
+.nav{display:flex;align-items:center;gap:8px;padding:6px 9px;border-radius:6px;
+
+  cursor:pointer;user-select:none;font-size:13px}
+
+.nav:hover{background:var(--panel2)}
+
+.nav.on{background:var(--accent-soft);color:var(--accent);font-weight:600}
+
+.nav .dot{width:9px;height:9px;border-radius:50%;flex:0 0 9px}
+
+.nav .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.nav .ct{color:var(--faint);font-size:11px;font-variant-numeric:tabular-nums}
+
+.nav.on .ct{color:var(--accent)}
+
+.nav .edit{opacity:0;font-size:12px;padding:0 3px;color:var(--muted)}
+
+.nav:hover .edit{opacity:.7}
+
+.nav .edit:hover{opacity:1;color:var(--accent)}
+
+.nav.dropon{outline:2px dashed var(--accent);outline-offset:-2px}
+
+.nav.dragging{opacity:.35}
+
+.nav.dropbefore{box-shadow:0 -3px 0 -1px var(--accent)}
+
+.nav.dropafter{box-shadow:0 3px 0 -1px var(--accent)}
+
+#side .foot{padding:10px 8px;border-top:1px solid var(--line);display:flex;gap:5px;align-items:center}
+
+#side .foot .btn{padding:6px 8px;font-size:13px}
+
+#side .foot .icon{width:28px;height:28px;padding:0}
+
+ 
+
+#main{flex:1;display:flex;flex-direction:column;min-width:0}
+
+#bar{display:flex;align-items:center;gap:8px;padding:10px 14px;
+
+  border-bottom:1px solid var(--line);background:var(--panel);flex-wrap:wrap}
+
+#bar .title{font-size:16px;font-weight:700;margin-right:4px}
+
+.grow{flex:1}
+
+#q{width:170px}
+
+#body{flex:1;overflow:auto;padding:14px 18px 60px}
+
+.wrap{max-width:920px;margin:0 auto}
+
+ 
+
+/* ---------- 快速新增 ---------- */
+
+#addbox{display:flex;gap:8px;margin-bottom:6px}
+
+#addinput{flex:1;padding:10px 12px;font-size:14px;background:var(--panel)}
+
+#hint{font-size:11.5px;color:var(--faint);margin:0 0 12px 2px}
+
+#hint code{background:var(--panel2);border:1px solid var(--line);border-radius:4px;
+
+  padding:0 4px;font-family:Consolas,monospace;font-size:11px}
+
+ 
+
+/* ---------- 統計 ---------- */
+
+#stats{display:flex;align-items:center;gap:10px;margin-bottom:12px;font-size:12px;color:var(--muted)}
+
+#pbar{flex:0 1 260px;height:6px;background:var(--line);border-radius:99px;overflow:hidden}
+
+#pbar i{display:block;height:100%;background:var(--ok);transition:width .25s}
+
+.chip{border:1px solid var(--line);border-radius:99px;padding:1px 9px;font-size:11.5px}
+
+.chip.red{color:var(--danger);border-color:var(--danger)}
+
+.chip.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+
+ 
+
+/* ---------- 任務 ---------- */
+
+#list{list-style:none;margin:0;padding:0}
+
+.task{display:flex;gap:10px;align-items:flex-start;background:var(--panel);
+
+  border:1px solid var(--line);border-left-width:3px;border-radius:var(--radius);
+
+  padding:9px 11px;margin-bottom:6px;position:relative}
+
+.task.p0{border-left-color:var(--p0)} .task.p1{border-left-color:var(--p1)}
+
+.task.p2{border-left-color:var(--p2)} .task.p3{border-left-color:var(--p3)}
+
+.task.sel{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+
+.task.done{opacity:.55}
+
+.task.dragging{opacity:.35}
+
+.task.dropafter{box-shadow:0 3px 0 -1px var(--accent)}
+
+.task.dropbefore{box-shadow:0 -3px 0 -1px var(--accent)}
+
+.grip{cursor:grab;color:var(--faint);font-size:13px;padding-top:2px;user-select:none}
+
+.grip:active{cursor:grabbing}
+
+.cb{width:17px;height:17px;flex:0 0 17px;margin-top:2px;border:1.5px solid var(--faint);
+
+  border-radius:5px;display:inline-flex;align-items:center;justify-content:center;
+
+  font-size:11px;color:transparent;transition:.12s;padding:0}
+
+.cb:hover{border-color:var(--ok)}
+
+.cb.on{background:var(--ok);border-color:var(--ok);color:#fff}
+
+.tmain{flex:1;min-width:0}
+
+.ttitle{word-break:break-word;cursor:text}
+
+.task.done .ttitle{text-decoration:line-through;color:var(--muted)}
+
+.ttitle[contenteditable="true"]{outline:1px solid var(--accent);border-radius:4px;padding:1px 3px}
+
+.meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:4px;font-size:11.5px}
+
+.tag{background:var(--panel2);border:1px solid var(--line);border-radius:99px;padding:0 7px;color:var(--muted)}
+
+.due{color:var(--muted)} .due.soon{color:var(--warn);font-weight:600}
+
+.due.over{color:var(--danger);font-weight:700}
+
+.st{border-radius:4px;padding:0 6px;border:1px solid var(--line);color:var(--muted)}
+
+.st.doing{color:var(--accent);border-color:var(--accent)}
+
+.st.hold{color:var(--warn);border-color:var(--warn)}
+
+.lst,.sub{color:var(--faint)}
+
+.tnote{white-space:pre-wrap;color:var(--muted);font-size:12px;margin-top:4px;
+
+  border-left:2px solid var(--line);padding-left:7px}
+
+.tact{display:flex;gap:2px;opacity:0;transition:.12s}
+
+.task:hover .tact,.task.sel .tact{opacity:1}
+
+.empty{text-align:center;color:var(--faint);padding:50px 0;line-height:2}
+
+.gh{font-size:11.5px;color:var(--faint);font-weight:600;margin:16px 0 6px 2px;
+
+  letter-spacing:.5px;display:flex;align-items:center;gap:8px}
+
+.gh:after{content:"";flex:1;height:1px;background:var(--line)}
+
+ 
+
+/* ---------- 明細面板 ---------- */
+
+#detail{width:300px;flex:0 0 300px;background:var(--panel);border-left:1px solid var(--line);
+
+  overflow:auto;padding:14px;display:none}
+
+#detail.on{display:block}
+
+#side.off{display:none}
+
+#dsplit{flex:0 0 6px;cursor:col-resize;background:transparent;display:none;
+
+  transition:background .12s}
+
+#dsplit.on{display:block}
+
+#dsplit:hover,#dsplit.drag{background:var(--accent)}
+
+#btnSide.on{color:var(--accent);background:var(--panel2)}
+
+#detail h3{margin:0 0 12px;font-size:13px;color:var(--faint);letter-spacing:.5px;
+
+  display:flex;justify-content:space-between;align-items:center}
+
+.fld{margin-bottom:11px}
+
+.fld label{display:block;font-size:11.5px;color:var(--muted);margin-bottom:4px}
+
+.fld input,.fld select,.fld textarea{width:100%}
+
+.fld textarea{resize:vertical;min-height:64px;font-size:13px}
+
+#subs{list-style:none;margin:0 0 6px;padding:0}
+
+#subs li{display:flex;align-items:center;gap:7px;padding:3px 0;font-size:13px}
+
+#subs li span{flex:1;cursor:text;word-break:break-word}
+
+#subs li.d span{text-decoration:line-through;color:var(--muted)}
+
+.dmeta{font-size:11px;color:var(--faint);border-top:1px solid var(--line);padding-top:8px;margin-top:12px}
+
+ 
+
+/* ---------- 對話框 ---------- */
+
+.mask{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;
+
+  align-items:center;justify-content:center;z-index:50;padding:20px}
+
+.modal{background:var(--panel);border-radius:12px;box-shadow:var(--shadow);
+
+  width:100%;max-width:880px;max-height:88vh;display:flex;flex-direction:column;overflow:hidden}
+
+.modal.sm{max-width:460px}
+
+.mhead{padding:13px 16px;border-bottom:1px solid var(--line);font-weight:700;
+
+  display:flex;align-items:center;gap:10px}
+
+.mbody{padding:16px;overflow:auto;flex:1}
+
+.mfoot{padding:12px 16px;border-top:1px solid var(--line);display:flex;gap:8px;
+
+  align-items:center;flex-wrap:wrap}
+
+.row{display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start}
+
+.col{flex:1;min-width:210px}
+
+.col h5{margin:0 0 6px;font-size:11.5px;color:var(--faint);letter-spacing:.5px}
+
+.opt{display:flex;align-items:flex-start;gap:7px;padding:3px 0;font-size:13px;cursor:pointer}
+
+.opt input{width:auto;padding:0;margin-top:3px;flex:0 0 auto}
+
+.opt small{display:block;color:var(--faint);font-size:11px;line-height:1.4}
+
+#preview{background:var(--panel2);border:1px solid var(--line);border-radius:8px;
+
+  padding:12px;height:330px;overflow:auto;white-space:pre-wrap;
+
+  font:12px/1.6 Consolas,"Microsoft JhengHei",monospace}
+
+#preview.rich{white-space:normal;font-family:inherit;font-size:13px;background:#fff;color:#111}
+
+table.keys{width:100%;border-collapse:collapse;font-size:13px}
+
+table.keys td{padding:5px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+
+.kbd{display:inline-block;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;
+
+  padding:0 5px;font:11px/1.7 Consolas,monospace;background:var(--panel2);white-space:nowrap}
+
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:99;
+
+  background:var(--text);color:var(--bg);padding:8px 16px;border-radius:99px;
+
+  font-size:13px;box-shadow:var(--shadow);opacity:0;transition:.25s;pointer-events:none}
+
+.toast.on{opacity:1;bottom:34px}
+
+#drop{position:fixed;inset:0;z-index:80;background:rgba(37,99,235,.14);
+
+  border:3px dashed var(--accent);display:none;align-items:center;justify-content:center;
+
+  font-size:18px;color:var(--accent);font-weight:700}
+
+#drop.on{display:flex}
+
+ 
+
+/* ---------- 回收桶／範本／分享 ---------- */
+
+.task.trashed{border-left-color:var(--faint);opacity:.75}
+
+.task.trashed .ttitle{color:var(--muted)}
+
+.task.trashed .tact{opacity:1}
+
+.tpl{border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin-bottom:7px;cursor:pointer}
+
+.tpl:hover{border-color:var(--accent)}
+
+.tpl.on{border-color:var(--accent);background:var(--accent-soft)}
+
+.tpl b{font-size:13.5px}
+
+.tpl small{display:block;color:var(--faint);font-size:11.5px;margin-top:2px}
+
+.tpl .del{float:right;color:var(--faint);font-size:12px;padding:0 4px}
+
+.tpl .del:hover{color:var(--danger)}
+
+.tplpv{font-size:12.5px;color:var(--muted);line-height:2}
+
+.tplpv b{color:var(--text);font-weight:600}
+
+#shareurl{width:100%;font:11.5px/1.6 Consolas,monospace;word-break:break-all}
+
+.warn{color:var(--warn);font-size:12px;margin-top:8px}
+
+ 
+
+@media print{
+
+  #side,#bar,#addbox,#hint,#detail,.tact,.grip,.gh:after{display:none!important}
+
+  body,#body{overflow:visible;height:auto}
+
+  .task{break-inside:avoid;border-color:#ccc}
+
+}
+
+@media (max-width:780px){
+
+  #side{display:none}
+
+  #detail{position:fixed;right:0;top:0;bottom:0;z-index:40;box-shadow:var(--shadow)}
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div id="app">
+
+ 
+
+  <aside id="side">
+
+    <div class="brand"><span>Todolisthtml</span><small>離線單檔</small></div>
+
+    <div id="navs"></div>
+
+    <div class="foot">
+
+      <button class="btn ghost" id="btnImport" title="匯入 JSON">匯入</button>
+
+      <button class="btn ghost" id="btnTpl" title="套用範本">範本</button>
+
+      <button class="btn ghost" id="btnExport" title="匯出／複製">匯出</button>
+
+      <button class="btn ghost icon" id="btnTheme" title="切換深淺主題">◐</button>
+
+      <button class="btn ghost icon" id="btnHelp" title="快捷鍵與說明">?</button>
+
+    </div>
+
+  </aside>
+
+ 
+
+  <main id="main">
+
+    <div id="bar">
+
+      <button class="btn ghost icon" id="btnSide" title="隱藏側欄 (Ctrl+B)">☰</button>
+
+      <span class="title" id="viewTitle">全部</span>
+
+      <input id="q" type="search" placeholder="搜尋標題／備註／標籤…">
+
+      <select id="sortSel" title="排序">
+
+        <option value="manual">手動排序</option>
+
+        <option value="due">依到期日</option>
+
+        <option value="priority">依優先級</option>
+
+        <option value="created">依建立時間</option>
+
+        <option value="title">依標題</option>
+
+      </select>
+
+      <select id="stFilter" title="狀態篩選">
+
+        <option value="">全部狀態</option>
+
+        <option value="todo">待辦</option>
+
+        <option value="doing">進行中</option>
+
+        <option value="hold">擱置</option>
+
+        <option value="done">已完成</option>
+
+      </select>
+
+      <label class="opt" style="padding:0"><input type="checkbox" id="showDone"><span>顯示已完成</span></label>
+
+      <span class="grow"></span>
+
+      <button class="btn ghost icon" id="btnUndo" title="復原 Ctrl+Z">↺</button>
+
+      <button class="btn ghost icon" id="btnRedo" title="重做 Ctrl+Y">↻</button>
+
+    </div>
+
+ 
+
+    <div id="body">
+
+      <div class="wrap">
+
+        <div id="addbox">
+
+          <input id="addinput" placeholder="輸入待辦後按 Enter…">
+
+          <button class="btn primary" id="btnAdd">新增</button>
+
+        </div>
+
+        <div id="hint">
+
+          快速語法：<code>!</code> 高 <code>!!</code> 緊急 ·
+
+          <code>#標籤</code> · <code>@今天</code> <code>@明天</code> <code>@9/10</code> <code>@2026-09-10</code> ·
+
+          <code>^清單名</code> 指定清單
+
+        </div>
+
+        <div id="tagbar" class="meta" style="margin-bottom:10px"></div>
+
+        <div id="stats"></div>
+
+        <ul id="list"></ul>
+
+      </div>
+
+    </div>
+
+  </main>
+
+ 
+
+  <div id="dsplit" title="拖曳調整明細寬度（點兩下還原預設）"></div>
+
+  <aside id="detail"></aside>
+
+</div>
+
+ 
+
+<div id="drop">放開以匯入 JSON</div>
+
+<div class="toast" id="toast"></div>
+
+<input type="file" id="fileInput" accept=".json,application/json" style="display:none">
+
+<div id="modalHost"></div>
+
+<script>
+
+"use strict";
+
+/* =====================================================================
+
+   Todolisthtml — 離線單檔待辦清單
+
+   資料只存在本機 localStorage，不連外、不上傳。
+
+   ===================================================================== */
+
+ 
+
+const KEY   = "todolisthtml.v1";
+
+const BAKKEY= "todolisthtml.backups";
+
+const SCHEMA= 1;
+
+const PRI   = ["低","中","高","緊急"];
+
+const STAT  = { todo:"待辦", doing:"進行中", hold:"擱置", done:"已完成" };
+
+const PALETTE=["#2563eb","#16a34a","#f59e0b","#ef4444","#8b5cf6","#0891b2","#db2777","#65a30d"];
+
+const TRASH_DAYS=7;
+
+const REPEATS=[
+
+  {v:"",   n:"不重複"},
+
+  {v:"d1", n:"每天"},
+
+  {v:"wd", n:"每個工作日"},
+
+  {v:"w1", n:"每週"},
+
+  {v:"w2", n:"每兩週"},
+
+  {v:"m1", n:"每月"}
+
+];
+
+const REPEAT_SYN={ "每天":"d1","daily":"d1","工作日":"wd","weekday":"wd",
+
+  "每週":"w1","每周":"w1","weekly":"w1","每兩週":"w2","每雙週":"w2","每兩周":"w2",
+
+  "每月":"m1","monthly":"m1" };
+
+const repName=v=>{ const r=REPEATS.find(x=>x.v===v); return r?r.n:""; };
+
+ 
+
+/* 內建範本：dueIn = 套用當天起算幾天後到期，null = 不設到期日 */
+
+const TEMPLATES=[
+
+{id:"tpl-daily", name:"每日工作", desc:"每天固定要做的幾件事", items:[
+
+   {title:"檢查郵件與訊息", pri:1, tags:["日常"], dueIn:0, repeat:"wd"},
+
+   {title:"今日重點三件事", pri:2, tags:["日常"], dueIn:0, repeat:"wd", subs:["第一件","第二件","第三件"]},
+
+   {title:"更新工作日誌", pri:1, tags:["日常"], dueIn:0, repeat:"wd"}
+
+]},
+
+{id:"tpl-project", name:"專案追蹤", desc:"需求到結案的標準流程", items:[
+
+   {title:"需求確認與範圍界定", pri:2, tags:["專案"], dueIn:3},
+
+   {title:"撰寫規格文件", pri:2, tags:["專案"], dueIn:7},
+
+   {title:"開發", pri:2, tags:["專案"], dueIn:21},
+
+   {title:"單元測試與整合測試", pri:2, tags:["專案"], dueIn:28},
+
+   {title:"上線", pri:3, tags:["專案"], dueIn:30},
+
+   {title:"驗收與結案", pri:1, tags:["專案"], dueIn:35}
+
+]},
+
+{id:"tpl-meeting", name:"會議待辦", desc:"會前、會中、會後", items:[
+
+   {title:"會前：準備議程與資料", pri:2, tags:["會議"], dueIn:0},
+
+   {title:"會中：做會議記錄", pri:1, tags:["會議"], dueIn:0},
+
+   {title:"會後：寄出會議記錄", pri:2, tags:["會議"], dueIn:1},
+
+   {title:"會後：追蹤各項待辦", pri:1, tags:["會議"], dueIn:7}
+
+]},
+
+{id:"tpl-release", name:"上線檢查表", desc:"部署前後該確認的事", items:[
+
+   {title:"備份現行版本與資料庫", pri:3, tags:["上線"], dueIn:0},
+
+   {title:"發出停機／異動公告", pri:2, tags:["上線"], dueIn:0},
+
+   {title:"確認回滾方案", pri:3, tags:["上線"], dueIn:0},
+
+   {title:"部署", pri:3, tags:["上線"], dueIn:0},
+
+   {title:"煙霧測試", pri:3, tags:["上線"], dueIn:0, subs:["主要功能","對外介接","排程作業"]},
+
+   {title:"通知使用者已完成", pri:1, tags:["上線"], dueIn:0}
+
+]},
+
+{id:"tpl-handover", name:"請假交接", desc:"離開前要交代清楚的事", items:[
+
+   {title:"整理待辦與進度給代理人", pri:3, tags:["交接"], dueIn:0},
+
+   {title:"轉交系統權限與帳號", pri:2, tags:["交接"], dueIn:0},
+
+   {title:"設定郵件自動回覆", pri:2, tags:["交接"], dueIn:0},
+
+   {title:"回來後接回進度", pri:1, tags:["交接"], dueIn:7}
+
+]}
+
+];
+
+const allTemplates=()=> TEMPLATES.concat(data.templates||[]);
+
+ 
+
+/* ---------- 小工具 ---------- */
+
+const $  = (s,r)=> (r||document).querySelector(s);
+
+const $$ = (s,r)=> Array.from((r||document).querySelectorAll(s));
+
+const uid= ()=> Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+
+const esc= s=> String(s==null?"":s).replace(/[&<>"']/g,c=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+
+const nowISO = ()=> new Date().toISOString();
+
+const clone  = o=> JSON.parse(JSON.stringify(o));
+
+ 
+
+function ymd(d){ const p=n=>String(n).padStart(2,"0");
+
+  return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate()); }
+
+const TODAY = ()=> ymd(new Date());
+
+function addDays(base,n){ const d=new Date(base); d.setDate(d.getDate()+n); return d; }
+
+function dayDiff(a,b){ // a,b = "YYYY-MM-DD"，回傳 a-b 的天數
+
+  const p=s=>{const[y,m,d]=s.split("-").map(Number); return Date.UTC(y,m-1,d);} ;
+
+  return Math.round((p(a)-p(b))/86400000);
+
+}
+
+function weekEnd(){ // 本週日（以週一為首）
+
+  const d=new Date(); const w=(d.getDay()+6)%7; return ymd(addDays(d,6-w));
+
+}
+
+function dueText(due){
+
+  if(!due) return "";
+
+  const diff = dayDiff(due, TODAY());
+
+  if(diff<0)  return "逾期 "+(-diff)+" 天 ("+due.slice(5)+")";
+
+  if(diff===0)return "今天到期";
+
+  if(diff===1)return "明天到期";
+
+  if(diff<=7) return due.slice(5)+"（"+diff+" 天後）";
+
+  return due;
+
+}
+
+function dueClass(due,done){
+
+  if(!due||done) return "";
+
+  const diff=dayDiff(due,TODAY());
+
+  return diff<0 ? "over" : (diff<=2 ? "soon" : "");
+
+}
+
+function toast(msg){
+
+  const t=$("#toast"); t.textContent=msg; t.classList.add("on");
+
+  clearTimeout(toast._h); toast._h=setTimeout(()=>t.classList.remove("on"),1900);
+
+}
+
+ 
+
+/* ---------- 狀態 ---------- */
+
+let data = null;          // 持久化資料
+
+let ui = {                // 不持久化的畫面狀態（部分會寫回 settings）
+
+  view:"all", listId:null, sel:null, q:"", stFilter:"", tagFilter:null
+
+};
+
+let hist=[], redo=[];
+
+ 
+
+/* ---------- 版面偏好（側欄收合、明細寬度） ----------
+
+   另存一支 localStorage key，不放進 data.settings。兩個理由：
+
+   settings 會被匯出／匯入，別人的 JSON 匯進來不該改動你的版面；
+
+   而且 save() 會呼叫 AutoBackup.markDirty()，拖個寬度就標記資料變動太吵。 */
+
+const UIKEY = "todolisthtml.ui";
+
+const dnumUI = v => { const n = parseInt(v, 10); return isNaN(n) ? 0 : n; };
+
+const DW_MIN = 240, DW_DEF = 300;      // 預設維持原本的 300px，要寬自己拖
+
+function readUI(){ try{ return JSON.parse(localStorage.getItem(UIKEY)||"{}")||{}; }catch(e){ return {}; } }
+
+function saveUI(){
+
+  try{ localStorage.setItem(UIKEY, JSON.stringify({ sideHide: !!ui.sideHide, dw: ui.dw })); }catch(e){}
+
+}
+
+function dwMax(){ return Math.max(DW_MIN, window.innerWidth - 420); }  // 主區至少留 420
+
+function applyDetailWidth(w){
+
+  w = Math.min(Math.max(Math.round(w)||DW_DEF, DW_MIN), dwMax());
+
+  ui.dw = w;
+
+  const d = $("#detail");
+
+  if(d){ d.style.width = w+"px"; d.style.flexBasis = w+"px"; }
+
+  return w;
+
+}
+
+function applySideHide(){
+
+  const s = $("#side"), b = $("#btnSide");
+
+  if(s) s.classList.toggle("off", !!ui.sideHide);
+
+  if(b){
+
+    b.classList.toggle("on", !!ui.sideHide);
+
+    b.title = (ui.sideHide ? "顯示" : "隱藏") + "側欄 (Ctrl+B)";
+
+  }
+
+}
+
+function toggleSide(){ ui.sideHide = !ui.sideHide; applySideHide(); saveUI(); }
+
+function initDetailResize(){
+
+  const sp = $("#dsplit");
+
+  if(!sp) return;
+
+  let sx=0, sw=0, on=false;
+
+  sp.addEventListener("mousedown", e=>{
+
+    on=true; sx=e.clientX; sw=$("#detail").getBoundingClientRect().width;
+
+    sp.classList.add("drag");
+
+    document.body.style.userSelect="none";   // 拖的時候不要選到文字
+
+    e.preventDefault();
+
+  });
+
+  window.addEventListener("mousemove", e=>{ if(on) applyDetailWidth(sw + (sx - e.clientX)); });
+
+  window.addEventListener("mouseup", ()=>{
+
+    if(!on) return;
+
+    on=false; sp.classList.remove("drag");
+
+    document.body.style.userSelect="";
+
+    saveUI();
+
+  });
+
+  sp.addEventListener("dblclick", ()=>{ applyDetailWidth(DW_DEF); saveUI(); });
+
+  window.addEventListener("resize", ()=>applyDetailWidth(ui.dw||DW_DEF));  // 視窗變小要重夾
+
+}
+
+ 
+
+function blank(){
+
+  const l1=uid();
+
+  return {
+
+    app:"Todolisthtml", version:SCHEMA, exportedAt:nowISO(),
+
+    settings:{ theme:"light", sort:"manual", showDone:true },
+
+    lists:[{id:l1,name:"我的待辦",color:PALETTE[0]}],
+
+    tasks:[], trash:[], templates:[]
+
+  };
+
+}
+
+function migrate(d){
+
+  if(!d||typeof d!=="object") throw new Error("格式不符");
+
+  if(!Array.isArray(d.tasks)||!Array.isArray(d.lists)) throw new Error("缺少 lists 或 tasks");
+
+  d.version = d.version||1;
+
+  d.settings = Object.assign({theme:"light",sort:"manual",showDone:true}, d.settings||{});
+
+  d.lists.forEach(l=>{ l.id=l.id||uid(); l.name=l.name||"未命名"; l.color=l.color||PALETTE[0]; });
+
+  d.trash = Array.isArray(d.trash) ? d.trash.filter(e=>e&&e.task&&e.task.title!=null).map(e=>({
+
+      id:e.id||uid(), task:e.task, listName:e.listName||"", deletedAt:e.deletedAt||nowISO() })) : [];
+
+  d.templates = Array.isArray(d.templates) ? d.templates.filter(t=>t&&Array.isArray(t.items)).map(t=>({
+
+      id:t.id||uid(), name:t.name||"未命名範本", desc:t.desc||"", custom:true,
+
+      items:t.items.filter(i=>i&&i.title) })) : [];
+
+  d.tasks.forEach((t,i)=>{
+
+    t.id=t.id||uid(); t.title=t.title||"";
+
+    t.status = STAT[t.status]?t.status:"todo";
+
+    t.priority = (typeof t.priority==="number" && t.priority>=0 && t.priority<=3)? t.priority : 1;
+
+    t.tags = Array.isArray(t.tags)?t.tags:[];
+
+    t.subtasks = Array.isArray(t.subtasks)? t.subtasks.map(s=>({id:s.id||uid(),title:s.title||"",done:!!s.done})) : [];
+
+    t.note = t.note||""; t.due = t.due||null;
+
+    t.repeat = REPEATS.some(r=>r.v===t.repeat) ? t.repeat : "";
+
+    t.order = typeof t.order==="number"? t.order : i;
+
+    t.createdAt=t.createdAt||nowISO(); t.updatedAt=t.updatedAt||t.createdAt;
+
+    t.completedAt = t.status==="done" ? (t.completedAt||t.updatedAt) : null;
+
+    if(!d.lists.some(l=>l.id===t.listId)) t.listId = d.lists[0].id;
+
+  });
+
+  return d;
+
+}
+
+ 
+
+/* ---------- 存讀檔 ---------- */
+
+let saveTimer=null;
+
+function save(){
+
+  clearTimeout(saveTimer);
+
+  saveTimer=setTimeout(()=>{
+
+    data.exportedAt=nowISO();
+
+    try{ localStorage.setItem(KEY, JSON.stringify(data)); }
+
+    catch(e){ toast("⚠ 本機儲存空間已滿，請先匯出 JSON 備份"); }
+
+    AutoBackup.markDirty();
+
+  },200);
+
+}
+
+function load(){
+
+  try{
+
+    const raw=localStorage.getItem(KEY);
+
+    if(raw) return migrate(JSON.parse(raw));
+
+  }catch(e){ console.warn("載入失敗，改用空白資料",e); }
+
+  return blank();
+
+}
+
+/* 每天第一次開啟時留一份快照，最多 5 份 */
+
+function snapshot(){
+
+  try{
+
+    const baks=JSON.parse(localStorage.getItem(BAKKEY)||"[]");
+
+    const today=TODAY();
+
+    if(baks.some(b=>b.date===today)) return;
+
+    baks.push({date:today, at:nowISO(), json:JSON.stringify(data)});
+
+    while(baks.length>5) baks.shift();
+
+    localStorage.setItem(BAKKEY, JSON.stringify(baks));
+
+  }catch(e){}
+
+}
+
+ 
+
+/* ---------- Undo / Redo ---------- */
+
+function push(){
+
+  hist.push(JSON.stringify(data));
+
+  if(hist.length>60) hist.shift();
+
+  redo.length=0;
+
+}
+
+function undo(){ if(!hist.length) return; redo.push(JSON.stringify(data));
+
+  data=migrate(JSON.parse(hist.pop())); save(); render(); toast("已復原"); }
+
+function doRedo(){ if(!redo.length) return; hist.push(JSON.stringify(data));
+
+  data=migrate(JSON.parse(redo.pop())); save(); render(); toast("已重做"); }
+
+ 
+
+/* ---------- 快速新增語法 ---------- */
+
+function parseQuick(text){
+
+  const t={ priority:1, tags:[], due:null, listName:null, repeat:"" };
+
+  let s=" "+text+" ";
+
+ 
+
+  s=s.replace(/(^|\s)(!{1,3})(?=\s)/g,(m,sp,ex)=>{ t.priority=Math.min(3,1+ex.length); return sp; });
+
+  s=s.replace(/(^|\s)#([^\s#]+)/g,(m,sp,tag)=>{ if(!t.tags.includes(tag)) t.tags.push(tag); return sp; });
+
+  s=s.replace(/(^|\s)\^([^\s^]+)/g,(m,sp,nm)=>{ t.listName=nm; return sp; });
+
+  s=s.replace(/(^|\s)@(\S+)/g,(m,sp,d)=>{ const v=parseDate(d); if(v){ t.due=v; return sp; } return m; });
+
+  s=s.replace(/(^|\s)\*(\S+)/g,(m,sp,r)=>{ const v=REPEAT_SYN[r]; if(v){ t.repeat=v; return sp; } return m; });
+
+ 
+
+  t.title=s.trim().replace(/\s{2,}/g," ");
+
+  return t;
+
+}
+
+function parseDate(d){
+
+  const now=new Date();
+
+  const map={ "今天":0,"today":0,"明天":1,"tmr":1,"tomorrow":1,"後天":2,"大後天":3 };
+
+  if(d in map) return ymd(addDays(now,map[d]));
+
+  if(d==="下週"||d==="下周") return ymd(addDays(now,7));
+
+  let m;
+
+  if((m=d.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/))) return ymd(new Date(+m[1],+m[2]-1,+m[3]));
+
+  if((m=d.match(/^(\d{1,2})[/-](\d{1,2})$/))){
+
+    let y=now.getFullYear(); const cand=new Date(y,+m[1]-1,+m[2]);
+
+    if(dayDiff(ymd(cand),TODAY())< -180) cand.setFullYear(y+1);
+
+    return ymd(cand);
+
+  }
+
+  if((m=d.match(/^\+(\d+)$/))) return ymd(addDays(now,+m[1]));
+
+  const wk={"週一":1,"週二":2,"週三":3,"週四":4,"週五":5,"週六":6,"週日":7,
+
+            "周一":1,"周二":2,"周三":3,"周四":4,"周五":5,"周六":6,"周日":7};
+
+  if(d in wk){ const cur=now.getDay()||7; let diff=wk[d]-cur; if(diff<=0) diff+=7;
+
+    return ymd(addDays(now,diff)); }
+
+  return null;
+
+}
+
+ 
+
+/* ---------- 資料操作 ---------- */
+
+function curListId(){
+
+  if(ui.view==="list") return ui.listId;
+
+  return data.lists[0] ? data.lists[0].id : null;
+
+}
+
+function addTask(raw){
+
+  const text=raw.trim(); if(!text) return;
+
+  const p=parseQuick(text);
+
+  if(!p.title) { toast("請輸入標題"); return; }
+
+  let listId=curListId();
+
+  if(p.listName){
+
+    let l=data.lists.find(x=>x.name===p.listName||x.name.startsWith(p.listName));
+
+    if(!l){ l={id:uid(),name:p.listName,color:PALETTE[data.lists.length%PALETTE.length]}; data.lists.push(l); }
+
+    listId=l.id;
+
+  }
+
+  push();
+
+  const maxOrder=data.tasks.reduce((a,t)=>Math.max(a,t.order),-1);
+
+  data.tasks.push({
+
+    id:uid(), listId, title:p.title, note:"", status:"todo",
+
+    priority:p.priority, due:p.due, tags:p.tags, subtasks:[], repeat:p.repeat,
+
+    order:maxOrder+1, createdAt:nowISO(), updatedAt:nowISO(), completedAt:null
+
+  });
+
+  save(); render();
+
+}
+
+function getTask(id){ return data.tasks.find(t=>t.id===id); }
+
+function touch(t){ t.updatedAt=nowISO(); }
+
+function setDone(t,done){
+
+  t.status = done?"done":"todo";
+
+  t.completedAt = done? nowISO() : null;
+
+  touch(t);
+
+  if(done && t.repeat) spawnNext(t);
+
+}
+
+/* 重複任務：完成當下就長出下一次，原本那筆留著當紀錄 */
+
+function nextDue(base,rep){
+
+  const [y,m,d]=base.split("-").map(Number);
+
+ 
+
+  // 固定天數：直接算，逾期再久也一次到位（不迭代，不會被上限截斷）
+
+  const step={d1:1,w1:7,w2:14}[rep];
+
+  if(step){
+
+    let dt=addDays(new Date(y,m-1,d),step);
+
+    const behind=dayDiff(TODAY(), ymd(dt));       // >=0 表示還沒超過今天
+
+    if(behind>=0) dt=addDays(dt,(Math.floor(behind/step)+1)*step);
+
+    return ymd(dt);
+
+  }
+
+ 
+
+  // 工作日：一天一天跳，跳過六日
+
+  if(rep==="wd"){
+
+    let dt=new Date(y,m-1,d), guard=0;
+
+    do{ do{ dt=addDays(dt,1); } while(dt.getDay()===0||dt.getDay()===6); }
+
+    while(dayDiff(ymd(dt),TODAY())<0 && guard++<20000);
+
+    return ymd(dt);
+
+  }
+
+ 
+
+  // 每月：錨在原本那一天，短月才夾到月底，不會逐月往前漂
+
+  if(rep==="m1"){
+
+    const anchor=d; let cur=new Date(y,m-1,1), res, guard=0;
+
+    do{
+
+      cur.setMonth(cur.getMonth()+1);
+
+      const last=new Date(cur.getFullYear(),cur.getMonth()+1,0).getDate();
+
+      res=new Date(cur.getFullYear(),cur.getMonth(),Math.min(anchor,last));
+
+    } while(dayDiff(ymd(res),TODAY())<0 && guard++<600);
+
+    return ymd(res);
+
+  }
+
+  return ymd(addDays(new Date(y,m-1,d),1));
+
+}
+
+function spawnNext(t){
+
+  const next=nextDue(t.due||TODAY(), t.repeat);
+
+  const maxOrder=data.tasks.reduce((a,x)=>Math.max(a,x.order),-1);
+
+  const nt=clone(t);
+
+  nt.id=uid(); nt.status="todo"; nt.completedAt=null; nt.due=next;
+
+  nt.subtasks=nt.subtasks.map(x=>({id:uid(),title:x.title,done:false}));
+
+  nt.order=maxOrder+1; nt.createdAt=nowISO(); nt.updatedAt=nowISO();
+
+  data.tasks.push(nt);
+
+  toast("🔁 已排下一次："+next);
+
+}
+
+function delTask(id){
+
+  const t=getTask(id); if(!t) return;
+
+  push();
+
+  const l=data.lists.find(x=>x.id===t.listId);
+
+  data.trash.push({ id:uid(), task:clone(t), listName:l?l.name:"未分類", deletedAt:nowISO() });
+
+  data.tasks=data.tasks.filter(x=>x.id!==id);
+
+  if(ui.sel===id) ui.sel=null;
+
+  save(); render(); toast("已移到回收桶（Ctrl+Z 或到回收桶還原）");
+
+}
+
+function restoreTrash(tid){
+
+  const e=data.trash.find(x=>x.id===tid); if(!e) return;
+
+  push();
+
+  const t=clone(e.task);
+
+  if(!data.lists.some(l=>l.id===t.listId)){
+
+    const l={id:t.listId||uid(), name:e.listName||"還原的清單",
+
+             color:PALETTE[data.lists.length%PALETTE.length]};
+
+    t.listId=l.id; data.lists.push(l);
+
+  }
+
+  t.order=data.tasks.reduce((a,x)=>Math.max(a,x.order),-1)+1;
+
+  t.updatedAt=nowISO();
+
+  data.tasks.push(t);
+
+  data.trash=data.trash.filter(x=>x.id!==tid);
+
+  save(); render(); toast("已還原到「"+e.listName+"」");
+
+}
+
+function purgeTrash(tid){
+
+  push();
+
+  data.trash=data.trash.filter(x=>x.id!==tid);
+
+  save(); render(); toast("已永久刪除（Ctrl+Z 可復原）");
+
+}
+
+function emptyTrash(){
+
+  if(!data.trash.length) return;
+
+  if(!confirm("確定永久刪除回收桶裡的 "+data.trash.length+" 個項目？")) return;
+
+  push(); data.trash=[]; save(); render(); toast("回收桶已清空（Ctrl+Z 可復原）");
+
+}
+
+/* 超過 TRASH_DAYS 天自動清掉，開檔時跑一次 */
+
+function autoPurge(){
+
+  const before=data.trash.length;
+
+  data.trash=data.trash.filter(e=>dayDiff(TODAY(), e.deletedAt.slice(0,10))<=TRASH_DAYS);
+
+  if(data.trash.length!==before) save();
+
+}
+
+ 
+
+/* =====================================================================
+
+   篩選與排序
+
+   ===================================================================== */
+
+const VIEWS = [
+
+  { id:"all",     name:"全部",   icon:"▤" },
+
+  { id:"today",   name:"今天",   icon:"◉" },
+
+  { id:"week",    name:"本週",   icon:"▦" },
+
+  { id:"overdue", name:"逾期",   icon:"⚑" },
+
+  { id:"done",    name:"已完成", icon:"✓" },
+
+  { id:"trash",   name:"回收桶", icon:"🗑" }
+
+];
+
+function inView(t,view){
+
+  switch(view){
+
+    case "all":     return true;
+
+    case "today":   return t.status!=="done" && t.due && dayDiff(t.due,TODAY())<=0;
+
+    case "week":    return t.status!=="done" && t.due && t.due<=weekEnd();
+
+    case "overdue": return t.status!=="done" && t.due && dayDiff(t.due,TODAY())<0;
+
+    case "done":    return t.status==="done";
+
+    case "trash":   return false;
+
+    default:        return true;
+
+  }
+
+}
+
+function viewTasks(){
+
+  if(ui.view==="trash") return [];
+
+  const q=ui.q.trim().toLowerCase();
+
+  let arr=data.tasks.filter(t=>{
+
+    if(ui.view==="list"){ if(t.listId!==ui.listId) return false; }
+
+    else if(!inView(t,ui.view)) return false;
+
+    if(ui.view!=="done" && !data.settings.showDone && t.status==="done") return false;
+
+    if(ui.stFilter && t.status!==ui.stFilter) return false;
+
+    if(ui.tagFilter && !t.tags.includes(ui.tagFilter)) return false;
+
+    if(q){
+
+      const hay=(t.title+" "+t.note+" "+t.tags.join(" ")+" "+
+
+                 t.subtasks.map(s=>s.title).join(" ")).toLowerCase();
+
+      if(!hay.includes(q)) return false;
+
+    }
+
+    return true;
+
+  });
+
+  return sortTasks(arr, data.settings.sort);
+
+}
+
+function sortTasks(arr,mode){
+
+  const far="9999-12-31";
+
+  const cmp={
+
+    manual:  (a,b)=> a.order-b.order,
+
+    due:     (a,b)=> (a.due||far).localeCompare(b.due||far) || b.priority-a.priority,
+
+    priority:(a,b)=> b.priority-a.priority || (a.due||far).localeCompare(b.due||far),
+
+    created: (a,b)=> a.createdAt.localeCompare(b.createdAt),
+
+    title:   (a,b)=> a.title.localeCompare(b.title,"zh-Hant")
+
+  }[mode] || ((a,b)=>a.order-b.order);
+
+  // 已完成一律沉底（「已完成」檢視除外）
+
+  return arr.sort((a,b)=>{
+
+    if(ui.view!=="done"){
+
+      const ad=a.status==="done"?1:0, bd=b.status==="done"?1:0;
+
+      if(ad!==bd) return ad-bd;
+
+    }
+
+    return cmp(a,b);
+
+  });
+
+}
+
+ 
+
+/* =====================================================================
+
+   繪製
+
+   ===================================================================== */
+
+function render(){
+
+  document.documentElement.setAttribute("data-theme", data.settings.theme);
+
+  renderSide(); renderBar(); renderTagbar(); renderList(); renderDetail(); refreshUndo();
+
+}
+
+function refreshUndo(){
+
+  $("#btnUndo").disabled=!hist.length; $("#btnRedo").disabled=!redo.length;
+
+}
+
+ 
+
+function renderSide(){
+
+  const cnt=v=>data.tasks.filter(t=>inView(t,v)&&(v==="done"||t.status!=="done")).length;
+
+  let h='<div class="navgroup"><h4>檢視</h4>';
+
+  VIEWS.forEach(v=>{
+
+    const n= v.id==="trash" ? data.trash.length
+
+           : v.id==="done"  ? data.tasks.filter(t=>t.status==="done").length : cnt(v.id);
+
+    const cls = v.id==="overdue" && n>0 ? ' style="color:var(--danger)"' : "";
+
+    h+= '<div class="nav'+(ui.view===v.id?" on":"")+'" data-view="'+v.id+'">'+
+
+        '<span'+cls+'>'+v.icon+'</span><span class="nm">'+v.name+'</span>'+
+
+        '<span class="ct">'+(n||"")+'</span></div>';
+
+  });
+
+  h+='</div><div class="navgroup"><h4>清單<button id="btnNewList" title="新增清單">＋</button></h4>';
+
+  data.lists.forEach(l=>{
+
+    const n=data.tasks.filter(t=>t.listId===l.id&&t.status!=="done").length;
+
+    h+= '<div class="nav'+(ui.view==="list"&&ui.listId===l.id?" on":"")+'" data-list="'+l.id+'" draggable="true">'+
+
+        '<span class="dot" style="background:'+esc(l.color)+'"></span>'+
+
+        '<span class="nm">'+esc(l.name)+'</span>'+
+
+        '<span class="ct">'+(n||"")+'</span>'+
+
+        '<button class="edit" data-editlist="'+l.id+'" title="設定清單">⋯</button></div>';
+
+  });
+
+  h+='</div>';
+
+  $("#navs").innerHTML=h;
+
+}
+
+ 
+
+function renderBar(){
+
+  let title="全部";
+
+  if(ui.view==="list"){ const l=data.lists.find(x=>x.id===ui.listId); title=l?l.name:"清單"; }
+
+  else { const v=VIEWS.find(v=>v.id===ui.view); title=v?v.name:"全部"; }
+
+  $("#viewTitle").textContent=title;
+
+  $("#sortSel").value=data.settings.sort;
+
+  $("#stFilter").value=ui.stFilter;
+
+  $("#showDone").checked=data.settings.showDone;
+
+  $("#q").value=ui.q;
+
+  const hide = ui.view==="trash" ? "none" : "";
+
+  $("#addbox").style.display=hide;
+
+  $("#hint").style.display=hide;
+
+  $("#tagbar").style.display=hide;
+
+}
+
+ 
+
+function renderTagbar(){
+
+  const pool={};
+
+  data.tasks.forEach(t=>{ if(ui.view==="list"&&t.listId!==ui.listId) return;
+
+    t.tags.forEach(g=>pool[g]=(pool[g]||0)+1); });
+
+  const keys=Object.keys(pool).sort((a,b)=>pool[b]-pool[a]).slice(0,20);
+
+  $("#tagbar").innerHTML = keys.length
+
+    ? keys.map(k=>'<button class="chip'+(ui.tagFilter===k?" on":"")+'" data-tag="'+esc(k)+'">#'+esc(k)+' '+pool[k]+'</button>').join("")
+
+    : "";
+
+}
+
+ 
+
+function renderTrash(){
+
+  const arr=data.trash.slice().reverse();
+
+  $("#stats").innerHTML = arr.length
+
+    ? '<span>'+arr.length+' 個已刪除項目</span>'+
+
+      '<span class="chip">超過 '+TRASH_DAYS+' 天自動清除</span><span class="grow"></span>'+
+
+      '<button class="btn" id="btnEmptyTrash">清空回收桶</button>'
+
+    : "";
+
+  if(!arr.length){
+
+    $("#list").innerHTML='<div class="empty">回收桶是空的<br><small>刪除的項目會先放這裡 '+TRASH_DAYS+' 天</small></div>';
+
+    return;
+
+  }
+
+  $("#list").innerHTML=arr.map(e=>{
+
+    const left=TRASH_DAYS-dayDiff(TODAY(), e.deletedAt.slice(0,10));
+
+    return '<li class="task trashed" data-tid="'+e.id+'">'+
+
+      '<span class="grip" style="visibility:hidden">⋮⋮</span>'+
+
+      '<div class="tmain"><div class="ttitle">'+esc(e.task.title)+'</div>'+
+
+      '<div class="meta"><span class="lst">▸ '+esc(e.listName)+'</span>'+
+
+        '<span class="due'+(left<=2?" over":"")+'">'+esc(e.deletedAt.slice(0,10))+' 刪除・'+
+
+        (left<=0?"今天清除":left+" 天後清除")+'</span></div></div>'+
+
+      '<div class="tact">'+
+
+        '<button class="btn ghost icon" data-tact="restore" title="還原">↩</button>'+
+
+        '<button class="btn ghost icon" data-tact="purge" title="永久刪除">✕</button>'+
+
+      '</div></li>';
+
+  }).join("");
+
+}
+
+ 
+
+function renderList(){
+
+  if(ui.view==="trash"){ renderTrash(); return; }
+
+  const arr=viewTasks();
+
+  const total=arr.length, done=arr.filter(t=>t.status==="done").length;
+
+  const over=arr.filter(t=>t.status!=="done"&&t.due&&dayDiff(t.due,TODAY())<0).length;
+
+  const pct= total? Math.round(done/total*100):0;
+
+  $("#stats").innerHTML= total
+
+    ? '<span>完成 '+done+' / '+total+'</span><div id="pbar"><i style="width:'+pct+'%"></i></div>'+
+
+      '<span>'+pct+'%</span>'+ (over?'<span class="chip red">逾期 '+over+'</span>':'')
+
+    : "";
+
+ 
+
+  if(!total){
+
+    $("#list").innerHTML='<div class="empty">沒有符合的項目<br><small>在上面輸入一行就能新增</small></div>';
+
+    return;
+
+  }
+
+  const groupByList = (ui.view!=="list");
+
+  let html="", lastList=null;
+
+  arr.forEach(t=>{
+
+    if(groupByList && data.settings.sort==="manual"){
+
+      if(t.listId!==lastList){
+
+        lastList=t.listId;
+
+        const l=data.lists.find(x=>x.id===t.listId);
+
+        html+='<div class="gh">'+esc(l?l.name:"未分類")+'</div>';
+
+      }
+
+    }
+
+    html+=taskHtml(t, !groupByList);
+
+  });
+
+  $("#list").innerHTML=html;
+
+}
+
+ 
+
+function taskHtml(t,hideList){
+
+  const l=data.lists.find(x=>x.id===t.listId);
+
+  const done=t.status==="done";
+
+  const subDone=t.subtasks.filter(s=>s.done).length;
+
+  let meta="";
+
+  if(t.due) meta+='<span class="due '+dueClass(t.due,done)+'">⏰ '+esc(dueText(t.due))+'</span>';
+
+  if(t.status!=="todo"&&t.status!=="done") meta+='<span class="st '+t.status+'">'+STAT[t.status]+'</span>';
+
+  if(t.priority>=2) meta+='<span class="st" style="color:var(--p'+t.priority+');border-color:var(--p'+t.priority+')">⚑'+PRI[t.priority]+'</span>';
+
+  t.tags.forEach(g=>meta+='<span class="tag">#'+esc(g)+'</span>');
+
+  if(t.repeat) meta+='<span class="st" title="重複任務">🔁 '+repName(t.repeat)+'</span>';
+
+  if(t.subtasks.length) meta+='<span class="sub">☑ '+subDone+'/'+t.subtasks.length+'</span>';
+
+  if(!hideList&&l) meta+='<span class="lst">▸ '+esc(l.name)+'</span>';
+
+ 
+
+  return '<li class="task p'+t.priority+(done?" done":"")+(ui.sel===t.id?" sel":"")+
+
+    '" data-id="'+t.id+'" draggable="true">'+
+
+    '<span class="grip" title="拖曳排序">⋮⋮</span>'+
+
+    '<button class="cb'+(done?" on":"")+'" data-act="toggle" title="完成／取消">✔</button>'+
+
+    '<div class="tmain">'+
+
+      '<div class="ttitle" data-act="title">'+esc(t.title)+'</div>'+
+
+      (meta?'<div class="meta">'+meta+'</div>':"")+
+
+      (t.note?'<div class="tnote">'+esc(t.note)+'</div>':"")+
+
+    '</div>'+
+
+    '<div class="tact">'+
+
+      '<button class="btn ghost icon" data-act="detail" title="明細">✎</button>'+
+
+      '<button class="btn ghost icon" data-act="del" title="刪除">🗑</button>'+
+
+    '</div></li>';
+
+}
+
+ 
+
+function renderDetail(){
+
+  const box=$("#detail"), sp=$("#dsplit");
+
+  const t=ui.sel?getTask(ui.sel):null;
+
+  if(!t){ box.classList.remove("on"); if(sp) sp.classList.remove("on"); box.innerHTML=""; return; }
+
+  box.classList.add("on");
+
+  if(sp) sp.classList.add("on");
+
+  box.innerHTML=
+
+    '<h3>任務明細<button class="btn ghost icon" data-d="close">✕</button></h3>'+
+
+    '<div class="fld"><label>標題</label><textarea data-d="title" rows="2">'+esc(t.title)+'</textarea></div>'+
+
+    '<div class="row" style="gap:8px">'+
+
+      '<div class="fld col"><label>清單</label><select data-d="listId">'+
+
+        data.lists.map(l=>'<option value="'+l.id+'"'+(l.id===t.listId?" selected":"")+'>'+esc(l.name)+'</option>').join("")+
+
+      '</select></div>'+
+
+      '<div class="fld col"><label>狀態</label><select data-d="status">'+
+
+        Object.keys(STAT).map(k=>'<option value="'+k+'"'+(k===t.status?" selected":"")+'>'+STAT[k]+'</option>').join("")+
+
+      '</select></div>'+
+
+    '</div>'+
+
+    '<div class="row" style="gap:8px">'+
+
+      '<div class="fld col"><label>優先級</label><select data-d="priority">'+
+
+        PRI.map((p,i)=>'<option value="'+i+'"'+(i===t.priority?" selected":"")+'>'+p+'</option>').join("")+
+
+      '</select></div>'+
+
+      '<div class="fld col"><label>到期日</label><input type="date" data-d="due" value="'+(t.due||"")+'"></div>'+
+
+    '</div>'+
+
+    '<div class="fld"><label>重複</label><select data-d="repeat">'+
+
+      REPEATS.map(r=>'<option value="'+r.v+'"'+(r.v===t.repeat?" selected":"")+'>'+r.n+'</option>').join("")+
+
+      '</select>'+(t.repeat?'<small style="color:var(--faint);font-size:11px">完成後會自動排下一次（'+
+
+        esc(nextDue(t.due||TODAY(),t.repeat))+'）</small>':"")+'</div>'+
+
+    '<div class="fld"><label>標籤（逗號或空白分隔）</label><input data-d="tags" value="'+esc(t.tags.join(", "))+'"></div>'+
+
+    '<div class="fld"><label>備註</label><textarea data-d="note">'+esc(t.note)+'</textarea></div>'+
+
+    '<div class="fld"><label>子任務</label><ul id="subs">'+
+
+      t.subtasks.map(s=>'<li class="'+(s.done?"d":"")+'" data-sid="'+s.id+'">'+
+
+        '<button class="cb'+(s.done?" on":"")+'" data-sact="toggle">✔</button>'+
+
+        '<span data-sact="edit">'+esc(s.title)+'</span>'+
+
+        '<button class="btn ghost icon" data-sact="del" style="width:22px;height:22px">✕</button></li>').join("")+
+
+      '</ul><input id="subAdd" placeholder="新增子任務後按 Enter"></div>'+
+
+    '<div class="dmeta">建立：'+t.createdAt.slice(0,16).replace("T"," ")+'<br>'+
+
+      '更新：'+t.updatedAt.slice(0,16).replace("T"," ")+
+
+      (t.completedAt?'<br>完成：'+t.completedAt.slice(0,16).replace("T"," "):"")+'</div>';
+
+}
+
+ 
+
+/* =====================================================================
+
+   互動
+
+   ===================================================================== */
+
+/* --- 側欄 --- */
+
+$("#navs").addEventListener("click", e=>{
+
+  const el=e.target.closest("[data-editlist]");
+
+  if(el){ e.stopPropagation(); listDialog(el.dataset.editlist); return; }
+
+  if(e.target.id==="btnNewList"){ listDialog(null); return; }
+
+  const nv=e.target.closest("[data-view]");
+
+  if(nv){ ui.view=nv.dataset.view; ui.listId=null; ui.sel=null; render(); return; }
+
+  const nl=e.target.closest("[data-list]");
+
+  if(nl){ ui.view="list"; ui.listId=nl.dataset.list; ui.sel=null; render(); }
+
+});
+
+ 
+
+/* --- 工具列 --- */
+
+$("#q").addEventListener("input", e=>{ ui.q=e.target.value; renderList(); });
+
+$("#sortSel").addEventListener("change", e=>{ data.settings.sort=e.target.value; save(); renderList(); });
+
+$("#stFilter").addEventListener("change", e=>{ ui.stFilter=e.target.value; renderList(); });
+
+$("#showDone").addEventListener("change", e=>{ data.settings.showDone=e.target.checked; save(); render(); });
+
+$("#btnUndo").addEventListener("click", undo);
+
+$("#btnRedo").addEventListener("click", doRedo);
+
+$("#btnTheme").addEventListener("click", ()=>{
+
+  data.settings.theme = data.settings.theme==="dark"?"light":"dark"; save(); render(); });
+
+$("#btnHelp").addEventListener("click", helpDialog);
+
+$("#btnSide").addEventListener("click", toggleSide);
+
+$("#btnTpl").addEventListener("click", templateDialog);
+
+$("#btnExport").addEventListener("click", exportDialog);
+
+$("#btnImport").addEventListener("click", ()=>$("#fileInput").click());
+
+$("#stats").addEventListener("click", e=>{ if(e.target.id==="btnEmptyTrash") emptyTrash(); });
+
+$("#tagbar").addEventListener("click", e=>{
+
+  const b=e.target.closest("[data-tag]"); if(!b) return;
+
+  ui.tagFilter = ui.tagFilter===b.dataset.tag ? null : b.dataset.tag;
+
+  renderTagbar(); renderList();
+
+});
+
+ 
+
+/* --- 新增 --- */
+
+$("#btnAdd").addEventListener("click", ()=>{ addTask($("#addinput").value); $("#addinput").value=""; });
+
+$("#addinput").addEventListener("keydown", e=>{
+
+  if(e.key==="Enter"){ addTask(e.target.value); e.target.value=""; }
+
+});
+
+ 
+
+/* --- 清單項目 --- */
+
+$("#list").addEventListener("click", e=>{
+
+  const tl=e.target.closest("[data-tid]");
+
+  if(tl){
+
+    const a=(e.target.closest("[data-tact]")||{}).dataset;
+
+    if(a && a.tact==="restore") restoreTrash(tl.dataset.tid);
+
+    else if(a && a.tact==="purge") purgeTrash(tl.dataset.tid);
+
+    return;
+
+  }
+
+  const li=e.target.closest(".task"); if(!li) return;
+
+  const t=getTask(li.dataset.id); if(!t) return;
+
+  const act=(e.target.closest("[data-act]")||{}).dataset;
+
+  if(!act){ ui.sel=t.id; render(); return; }
+
+  if(act.act==="toggle"){ push(); setDone(t,t.status!=="done"); save(); render(); }
+
+  else if(act.act==="del"){ delTask(t.id); }
+
+  else if(act.act==="detail"){ ui.sel=t.id; render(); }
+
+  else if(act.act==="title"){ inlineEdit(e.target,t); }
+
+});
+
+function inlineEdit(el,t){
+
+  if(el.isContentEditable) return;
+
+  el.contentEditable="true"; el.focus();
+
+  const r=document.createRange(); r.selectNodeContents(el);
+
+  const s=getSelection(); s.removeAllRanges(); s.addRange(r);
+
+  const finish=(ok)=>{
+
+    el.contentEditable="false";
+
+    const v=el.textContent.trim();
+
+    if(ok && v && v!==t.title){ push(); t.title=v; touch(t); save(); }
+
+    render();
+
+  };
+
+  el.addEventListener("blur",()=>finish(true),{once:true});
+
+  el.addEventListener("keydown",ev=>{
+
+   if(ev.key==="Enter"){ ev.preventDefault(); el.blur(); }
+
+    if(ev.key==="Escape"){ ev.preventDefault(); el.textContent=t.title; el.blur(); }
+
+  });
+
+}
+
+ 
+
+/* --- 拖曳排序（同時支援拖到側欄清單搬移） --- */
+
+let dragId=null;
+
+$("#list").addEventListener("dragstart", e=>{
+
+  const li=e.target.closest(".task"); if(!li) return;
+
+  dragId=li.dataset.id; li.classList.add("dragging");
+
+  e.dataTransfer.effectAllowed="move";
+
+  e.dataTransfer.setData("text/plain", dragId);
+
+});
+
+$("#list").addEventListener("dragend", ()=>{
+
+  dragId=null; $$(".task").forEach(x=>x.classList.remove("dragging","dropbefore","dropafter"));
+
+  $$(".nav").forEach(x=>x.classList.remove("dropon"));
+
+});
+
+$("#list").addEventListener("dragover", e=>{
+
+  if(!dragId) return; e.preventDefault();
+
+  const li=e.target.closest(".task"); if(!li||li.dataset.id===dragId) return;
+
+  const before = (e.clientY - li.getBoundingClientRect().top) < li.offsetHeight/2;
+
+  $$(".task").forEach(x=>x.classList.remove("dropbefore","dropafter"));
+
+  li.classList.add(before?"dropbefore":"dropafter");
+
+});
+
+$("#list").addEventListener("drop", e=>{
+
+  if(!dragId) return; e.preventDefault();
+
+  const li=e.target.closest(".task"); if(!li||li.dataset.id===dragId) return;
+
+  const before=li.classList.contains("dropbefore");
+
+  reorder(dragId, li.dataset.id, before);
+
+});
+
+function reorder(srcId,dstId,before){
+
+  if(data.settings.sort!=="manual"){ toast("請先切換為「手動排序」才能拖曳"); return; }
+
+  push();
+
+  const arr=data.tasks.slice().sort((a,b)=>a.order-b.order);
+
+  const src=arr.find(t=>t.id===srcId), dst=arr.find(t=>t.id===dstId);
+
+  arr.splice(arr.indexOf(src),1);
+
+  arr.splice(arr.indexOf(dst)+(before?0:1),0,src);
+
+  arr.forEach((t,i)=>t.order=i);
+
+  if(src.listId!==dst.listId){ src.listId=dst.listId; }
+
+  touch(src); save(); render();
+
+}
+
+/* 側欄清單本身也可以上下拖曳調整順序。
+
+   用獨立的 dragListId，不跟任務的 dragId 混用——側欄同時是
+
+   「拖任務進來＝搬移」的放置目標，兩種拖曳必須分得開。
+
+   清單沒有 order 欄位，順序就是 data.lists 的陣列順序，所以直接搬陣列元素。 */
+
+let dragListId=null;
+
+$("#navs").addEventListener("dragstart", e=>{
+
+  const n=e.target.closest("[data-list]"); if(!n) return;
+
+  dragListId=n.dataset.list; n.classList.add("dragging");
+
+  e.dataTransfer.effectAllowed="move";
+
+  try{ e.dataTransfer.setData("text/plain", dragListId); }catch(x){}
+
+});
+
+$("#navs").addEventListener("dragend", ()=>{
+
+  dragListId=null;
+
+  $$(".nav").forEach(x=>x.classList.remove("dragging","dropbefore","dropafter","dropon"));
+
+});
+
+ 
+
+/* 拖到側欄清單 = 搬移（任務）／調整順序（清單） */
+
+$("#navs").addEventListener("dragover", e=>{
+
+  const n=e.target.closest("[data-list]"); if(!n) return;
+
+  if(dragListId){
+
+    if(n.dataset.list===dragListId) return;
+
+    e.preventDefault();
+
+    const before=(e.clientY-n.getBoundingClientRect().top) < n.offsetHeight/2;
+
+    $$(".nav").forEach(x=>x.classList.remove("dropbefore","dropafter"));
+
+    n.classList.add(before?"dropbefore":"dropafter");
+
+    return;
+
+  }
+
+  if(!dragId) return;
+
+  e.preventDefault(); $$(".nav").forEach(x=>x.classList.remove("dropon")); n.classList.add("dropon");
+
+});
+
+$("#navs").addEventListener("dragleave", e=>{
+
+  const n=e.target.closest("[data-list]"); if(n) n.classList.remove("dropbefore","dropafter","dropon");
+
+});
+
+$("#navs").addEventListener("drop", e=>{
+
+  const n=e.target.closest("[data-list]"); if(!n) return;
+
+  if(dragListId){
+
+    if(n.dataset.list===dragListId) return;
+
+    e.preventDefault();
+
+    const before=n.classList.contains("dropbefore");
+
+    const src=dragListId; dragListId=null;
+
+    reorderList(src, n.dataset.list, before);
+
+    return;
+
+  }
+
+  if(!dragId) return;
+
+  e.preventDefault(); const t=getTask(dragId); if(!t) return;
+
+  push(); t.listId=n.dataset.list; touch(t); save(); render(); toast("已搬移");
+
+});
+
+ 
+
+/* 清單重新排序：直接搬 data.lists 的陣列元素。
+
+   splice 之後索引會變，所以要重新找一次目標位置。 */
+
+function reorderList(srcId, dstId, before){
+
+  const arr=data.lists;
+
+  const si=arr.findIndex(l=>l.id===srcId);
+
+  if(si<0 || srcId===dstId) return;
+
+  if(arr.findIndex(l=>l.id===dstId)<0) return;
+
+  push();
+
+  const src=arr.splice(si,1)[0];
+
+  const at=arr.findIndex(l=>l.id===dstId)+(before?0:1);
+
+  arr.splice(at,0,src);
+
+  save(); render(); toast("清單順序已調整");
+
+}
+
+ 
+
+/* --- 明細面板 --- */
+
+$("#detail").addEventListener("click", e=>{
+
+  if(e.target.closest('[data-d="close"]')){ ui.sel=null; render(); return; }
+
+  const li=e.target.closest("[data-sid]"); if(!li) return;
+
+  const t=getTask(ui.sel); const s=t.subtasks.find(x=>x.id===li.dataset.sid);
+
+  const a=(e.target.closest("[data-sact]")||{}).dataset;
+
+  if(!a) return;
+
+  if(a.sact==="toggle"){ push(); s.done=!s.done; touch(t); save(); render(); }
+
+  else if(a.sact==="del"){ push(); t.subtasks=t.subtasks.filter(x=>x.id!==s.id); touch(t); save(); render(); }
+
+  else if(a.sact==="edit"){
+
+    const v=prompt("修改子任務", s.title);
+
+    if(v!=null && v.trim()){ push(); s.title=v.trim(); touch(t); save(); render(); }
+
+  }
+
+});
+
+$("#detail").addEventListener("change", e=>{
+
+  const f=e.target.dataset.d; if(!f) return;
+
+  const t=getTask(ui.sel); if(!t) return;
+
+  push();
+
+  const v=e.target.value;
+
+  if(f==="priority") t.priority=+v;
+
+  else if(f==="due") t.due=v||null;
+
+  else if(f==="tags") t.tags=v.split(/[,，\s]+/).map(s=>s.trim()).filter(Boolean);
+
+  else if(f==="status"){ if(v==="done") setDone(t,true); else { t.status=v; t.completedAt=null; } }
+
+  else t[f]=v;
+
+  touch(t); save();
+
+  renderSide(); renderBar(); renderTagbar(); renderList(); refreshUndo();
+
+});
+
+$("#detail").addEventListener("keydown", e=>{
+
+  if(e.target.id!=="subAdd"||e.key!=="Enter") return;
+
+  const v=e.target.value.trim(); if(!v) return;
+
+  const t=getTask(ui.sel); push();
+
+  t.subtasks.push({id:uid(),title:v,done:false}); touch(t); save(); render();
+
+  const inp=$("#subAdd"); if(inp) inp.focus();
+
+});
+
+ 
+
+/* --- 清單管理 --- */
+
+function listDialog(id){
+
+  const l = id? data.lists.find(x=>x.id===id) : null;
+
+  const html=
+
+    '<div class="fld"><label>清單名稱</label><input id="lName" value="'+esc(l?l.name:"")+'" placeholder="例如：FPS 上線"></div>'+
+
+    '<div class="fld"><label>顏色</label><div id="lColors" class="meta">'+
+
+      PALETTE.map(c=>'<button class="chip" data-c="'+c+'" style="background:'+c+
+
+        ';width:26px;height:22px;border-color:'+((l&&l.color===c)?"var(--text)":"transparent")+'"></button>').join("")+
+
+    '</div></div>'+
+
+    (l&&data.lists.length>1?'<div style="font-size:12px;color:var(--faint)">刪除清單時，裡面的 '+
+
+      data.tasks.filter(t=>t.listId===l.id).length+' 個項目會一併刪除。</div>':"");
+
+  let color = l? l.color : PALETTE[data.lists.length%PALETTE.length];
+
+  const m=modal(id?"清單設定":"新增清單", html,
+
+    [ (l&&data.lists.length>1)?{txt:"刪除清單",cls:"btn",act:()=>{
+
+         if(!confirm("確定刪除「"+l.name+"」及其項目？")) return false;
+
+         push(); data.tasks=data.tasks.filter(t=>t.listId!==l.id);
+
+         data.lists=data.lists.filter(x=>x.id!==l.id);
+
+         if(ui.listId===l.id){ ui.view="all"; ui.listId=null; }
+
+         save(); render();
+
+      }}:null,
+
+      {grow:true},
+
+      {txt:"取消",cls:"btn"},
+
+      {txt:"儲存",cls:"btn primary",act:()=>{
+
+        const nm=$("#lName").value.trim(); if(!nm){ toast("請輸入名稱"); return false; }
+
+        push();
+
+        if(l){ l.name=nm; l.color=color; }
+
+        else { const nl={id:uid(),name:nm,color}; data.lists.push(nl); ui.view="list"; ui.listId=nl.id; }
+
+        save(); render();
+
+      }}
+
+    ], "sm");
+
+  $("#lColors",m).addEventListener("click", ev=>{
+
+    const b=ev.target.closest("[data-c]"); if(!b) return;
+
+    color=b.dataset.c;
+
+    $$("#lColors [data-c]",m).forEach(x=>x.style.borderColor="transparent");
+
+    b.style.borderColor="var(--text)";
+
+  });
+
+  const n=$("#lName",m); n.focus(); n.select();
+
+}
+
+ 
+
+/* --- 範本 --- */
+
+function tplItemLine(it){
+
+  const bits=[];
+
+  if(typeof it.pri==="number" && it.pri>=2) bits.push("⚑"+PRI[it.pri]);
+
+  if(typeof it.dueIn==="number") bits.push("⏰"+(it.dueIn===0?"當天":"＋"+it.dueIn+" 天"));
+
+  if(it.repeat) bits.push("🔁"+repName(it.repeat));
+
+  if(it.tags&&it.tags.length) bits.push(it.tags.map(x=>"#"+x).join(" "));
+
+  return "<b>"+esc(it.title)+"</b>"+(bits.length?" — "+esc(bits.join(" ・ ")):"")+
+
+    ((it.subs&&it.subs.length)?'<br><span style="padding-left:14px">└ '+
+
+      it.subs.map(esc).join("　└ ")+"</span>":"");
+
+}
+
+function templateDialog(){
+
+  let sel=allTemplates()[0];
+
+  const body=
+
+   '<div class="row">'+
+
+    '<div class="col" style="max-width:280px"><h5>選一個範本</h5><div id="tplList"></div></div>'+
+
+    '<div class="col"><h5 id="tplName">預覽</h5><div class="tplpv" id="tplPv"></div>'+
+
+      '<h5 style="margin-top:14px">套用到</h5>'+
+
+      '<label class="opt"><input type="radio" name="tmode" value="new" checked><span>建立成新清單</span></label>'+
+
+      '<input id="tplNewName" placeholder="新清單名稱" style="margin:2px 0 8px 22px;width:calc(100% - 22px)">'+
+
+      '<label class="opt"><input type="radio" name="tmode" value="cur"><span>加到目前清單'+
+
+        '<small>'+esc(scopeTitle("list"))+'</small></span></label>'+
+
+    '</div></div>';
+
+  const m=modal("範本", body, [
+
+    {txt:"把目前畫面存成範本", cls:"btn", keep:true, act:saveAsTemplate},
+
+    {grow:true},
+
+    {txt:"取消", cls:"btn"},
+
+    {txt:"套用", cls:"btn primary", act:()=>{
+
+      if(!sel) return false;
+
+      const mode=$('input[name="tmode"]:checked',m).value;
+
+      applyTemplate(sel, mode, $("#tplNewName",m).value.trim());
+
+    }}
+
+  ]);
+
+  function paintList(){
+
+    $("#tplList",m).innerHTML=allTemplates().map(t=>
+
+      '<div class="tpl'+(sel&&sel.id===t.id?" on":"")+'" data-tpl="'+t.id+'">'+
+
+        (t.custom?'<button class="del" data-deltpl="'+t.id+'" title="刪除這個自訂範本">✕</button>':"")+
+
+        '<b>'+esc(t.name)+'</b>'+(t.custom?' <span class="chip" style="font-size:10px">自訂</span>':"")+
+
+        '<small>'+esc(t.desc||(t.items.length+" 個項目"))+'</small></div>').join("");
+
+  }
+
+  function paintPv(){
+
+    if(!sel){ $("#tplPv",m).innerHTML="（沒有範本）"; return; }
+
+    $("#tplName",m).textContent="預覽 — "+sel.name+"（"+sel.items.length+" 項）";
+
+    $("#tplPv",m).innerHTML=sel.items.map(tplItemLine).join("<br>");
+
+    const inp=$("#tplNewName",m); if(!inp.value) inp.placeholder=sel.name;
+
+  }
+
+  $("#tplList",m).addEventListener("click", ev=>{
+
+    const d=ev.target.closest("[data-deltpl]");
+
+    if(d){
+
+      ev.stopPropagation();
+
+      const t=data.templates.find(x=>x.id===d.dataset.deltpl);
+
+      if(!t || !confirm("刪除自訂範本「"+t.name+"」？")) return;
+
+      push(); data.templates=data.templates.filter(x=>x.id!==t.id); save();
+
+      if(sel && sel.id===t.id) sel=allTemplates()[0];
+
+      paintList(); paintPv(); return;
+
+    }
+
+    const c=ev.target.closest("[data-tpl]"); if(!c) return;
+
+    sel=allTemplates().find(x=>x.id===c.dataset.tpl);
+
+    paintList(); paintPv();
+
+  });
+
+  paintList(); paintPv();
+
+  function saveAsTemplate(){
+
+    const items=viewTasks().filter(t=>t.status!=="done").map(t=>({
+
+      title:t.title, pri:t.priority, tags:t.tags.slice(), note:t.note,
+
+      dueIn: t.due? dayDiff(t.due,TODAY()) : null,
+
+      repeat:t.repeat, subs:t.subtasks.map(x=>x.title)
+
+    }));
+
+    if(!items.length){ toast("目前畫面沒有未完成項目可存"); return; }
+
+    const nm=prompt("範本名稱", scopeTitle(ui.view==="list"?"list":"view"));
+
+    if(nm==null||!nm.trim()) return;
+
+    push();
+
+    const t={ id:uid(), name:nm.trim(), desc:items.length+" 個項目（自訂）", custom:true, items };
+
+    data.templates.push(t); save();
+
+    sel=t; paintList(); paintPv();
+
+    toast("已存成範本「"+t.name+"」");
+
+  }
+
+}
+
+function applyTemplate(tpl, mode, newName){
+
+  push();
+
+  let listId;
+
+  if(mode==="new"){
+
+    const l={ id:uid(), name:(newName||tpl.name), color:PALETTE[data.lists.length%PALETTE.length] };
+
+    data.lists.push(l); listId=l.id; ui.view="list"; ui.listId=l.id;
+
+  } else listId=curListId();
+
+  let ord=data.tasks.reduce((a,t)=>Math.max(a,t.order),-1);
+
+  tpl.items.forEach(it=>{
+
+    data.tasks.push({
+
+      id:uid(), listId, title:it.title, note:it.note||"", status:"todo",
+
+      priority: typeof it.pri==="number"? it.pri : 1,
+
+      due: typeof it.dueIn==="number" ? ymd(addDays(new Date(), it.dueIn)) : null,
+
+      tags:(it.tags||[]).slice(), repeat: it.repeat||"",
+
+      subtasks:(it.subs||[]).map(x=>({id:uid(),title:x,done:false})),
+
+      order:++ord, createdAt:nowISO(), updatedAt:nowISO(), completedAt:null
+
+    });
+
+  });
+
+  ui.sel=null; save(); render();
+
+  toast("已套用範本「"+tpl.name+"」，新增 "+tpl.items.length+" 項");
+
+}
+
+ 
+
+/* Ctrl+S：立即備份到已設定的資料夾。
+
+   資料本身每次變動就寫 localStorage 了，不需要手動存；這裡「存檔」的意思是
+
+   把一份寫到你選的資料夾（平常 24 小時才自動跑一次）。
+
+   沒設定過資料夾的話 run() 會直接回 false 什麼都不做，按了沒反應會以為壞掉，
+
+   所以先擋下來把設定叫出來。 */
+
+function backupNow(){
+
+  if(AutoBackup.mode === "unset" || AutoBackup.mode === "off"){
+
+    toast("尚未設定自動備份，先選一個資料夾");
+
+    AutoBackup.settings();
+
+    return;
+
+  }
+
+  AutoBackup.now().then(ok => toast(ok ? "已備份到資料夾" : "備份未完成 — 看一下畫面上方的提示列"));
+
+}
+
+ 
+
+/* --- 快捷鍵 --- */
+
+document.addEventListener("keydown", e=>{
+
+  const inField = /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable;
+
+  if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==="z" && !e.shiftKey){ if(!inField){ e.preventDefault(); undo(); } return; }
+
+  if((e.ctrlKey||e.metaKey) && (e.key.toLowerCase()==="y" || (e.shiftKey&&e.key.toLowerCase()==="z"))){ if(!inField){ e.preventDefault(); doRedo(); } return; }
+
+  if((e.ctrlKey||e.metaKey) && e.altKey && e.key.toLowerCase()==="s"){ e.preventDefault(); download(jsonBlobName(), JSON.stringify(exportData(scopeAll(),true),null,2)); return; }
+
+  if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==="s"){ e.preventDefault(); backupNow(); return; }
+
+  if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==="e"){ e.preventDefault(); exportDialog(); return; }
+
+  if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==="b"){ e.preventDefault(); toggleSide(); return; }
+
+  if(inField) return;
+
+  if(e.key==="/"){ e.preventDefault(); $("#q").focus(); }
+
+  else if(e.key==="n"){ e.preventDefault(); $("#addinput").focus(); }
+
+  else if(e.key==="?"){ e.preventDefault(); helpDialog(); }
+
+  else if(e.key==="Escape"){ if(ui.sel){ ui.sel=null; render(); } }
+
+  else if(e.key==="Delete" && ui.sel){ delTask(ui.sel); }
+
+});
+
+ 
+
+/* =====================================================================
+
+   通用對話框
+
+   ===================================================================== */
+
+function modal(title, bodyHtml, buttons, size){
+
+  const host=$("#modalHost");
+
+  const mask=document.createElement("div");
+
+  mask.className="mask";
+
+  mask.innerHTML='<div class="modal '+(size||"")+'">'+
+
+    '<div class="mhead"><span class="grow">'+esc(title)+'</span>'+
+
+      '<button class="btn ghost icon" data-close>✕</button></div>'+
+
+    '<div class="mbody">'+bodyHtml+'</div>'+
+
+    '<div class="mfoot"></div></div>';
+
+  const foot=$(".mfoot",mask);
+
+  (buttons||[]).filter(Boolean).forEach(b=>{
+
+    if(b.grow){ const s=document.createElement("span"); s.className="grow"; foot.appendChild(s); return; }
+
+    const btn=document.createElement("button");
+
+    btn.className=b.cls||"btn"; btn.textContent=b.txt; btn.id=b.id||"";
+
+    btn.addEventListener("click",()=>{ if(b.act && b.act()===false) return; if(!b.keep) close(); });
+
+    foot.appendChild(btn);
+
+  });
+
+  function close(){ mask.remove(); document.removeEventListener("keydown",onEsc); }
+
+  function onEsc(e){ if(e.key==="Escape"){ e.stopPropagation(); close(); } }
+
+  mask.addEventListener("click",e=>{ if(e.target===mask||e.target.closest("[data-close]")) close(); });
+
+  document.addEventListener("keydown",onEsc);
+
+  host.appendChild(mask);
+
+  mask.close=close;
+
+  return mask;
+
+}
+
+ 
+
+/* =====================================================================
+
+   匯出：資料整理
+
+   ===================================================================== */
+
+function scopeAll(){ return data.tasks.slice(); }
+
+function collect(scope, undoneOnly){
+
+  let arr;
+
+  if(scope==="list")      arr=data.tasks.filter(t=>t.listId===curListId());
+
+  else if(scope==="view") arr=viewTasks();
+
+  else                    arr=data.tasks.slice();
+
+  if(undoneOnly) arr=arr.filter(t=>t.status!=="done");
+
+  return sortTasks(arr, data.settings.sort==="manual"?"manual":data.settings.sort);
+
+}
+
+function groupByList(arr){
+
+  const g=[];
+
+  data.lists.forEach(l=>{
+
+    const items=arr.filter(t=>t.listId===l.id);
+
+    if(items.length) g.push({list:l, items});
+
+  });
+
+  const orphan=arr.filter(t=>!data.lists.some(l=>l.id===t.listId));
+
+  if(orphan.length) g.push({list:{name:"未分類",color:"#888"}, items:orphan});
+
+  return g;
+
+}
+
+function scopeTitle(scope){
+
+  if(scope==="list"){ const l=data.lists.find(x=>x.id===curListId()); return l?l.name:"待辦"; }
+
+  if(scope==="view") return $("#viewTitle").textContent;
+
+  return "全部待辦";
+
+}
+
+function stamp(){ const d=new Date(), p=n=>String(n).padStart(2,"0");
+
+  return d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+"-"+p(d.getHours())+p(d.getMinutes()); }
+
+function jsonBlobName(){ return "Todolisthtml-"+stamp()+".json"; }
+
+ 
+
+/* =====================================================================
+
+   匯出格式 1：純文字
+
+   ===================================================================== */
+
+function buildText(o){
+
+  const g=groupByList(o.tasks);
+
+  const done=o.tasks.filter(t=>t.status==="done").length;
+
+  let s = "■ "+o.title+"（"+TODAY()+"）  完成 "+done+"/"+o.tasks.length+"\n";
+
+  s += "".padEnd(40,"-")+"\n";
+
+  g.forEach(grp=>{
+
+    if(g.length>1) s += "\n【"+grp.list.name+"】\n";
+
+    grp.items.forEach(t=>{
+
+      s += (t.status==="done"?"[x] ":"[ ] ")+t.title;
+
+      const tail=[];
+
+      if(o.priority && t.priority>=2) tail.push("⚑"+PRI[t.priority]);
+
+      if(o.due && t.due) tail.push("⏰"+dueText(t.due));
+
+      if(t.status==="doing"||t.status==="hold") tail.push(STAT[t.status]);
+
+      if(o.tags && t.tags.length) tail.push(t.tags.map(x=>"#"+x).join(" "));
+
+      if(tail.length) s += "   "+tail.join("  ");
+
+      s += "\n";
+
+      if(o.subtasks) t.subtasks.forEach(x=>s += "    └ "+(x.done?"[x] ":"[ ] ")+x.title+"\n");
+
+      if(o.note && t.note) t.note.split("\n").forEach(n=>s += "      "+n+"\n");
+
+    });
+
+  });
+
+  return s;
+
+}
+
+ 
+
+/* =====================================================================
+
+   匯出格式 2：Markdown
+
+   ===================================================================== */
+
+function buildMarkdown(o){
+
+  const g=groupByList(o.tasks);
+
+  const done=o.tasks.filter(t=>t.status==="done").length;
+
+  let s = "# "+o.title+"\n\n> "+TODAY()+" ・ 完成 "+done+"/"+o.tasks.length+"\n\n";
+
+  g.forEach(grp=>{
+
+    if(g.length>1) s += "## "+grp.list.name+"\n\n";
+
+    grp.items.forEach(t=>{
+
+      let line = "- ["+(t.status==="done"?"x":" ")+"] "+t.title;
+
+      const tail=[];
+
+      if(o.priority && t.priority>=2) tail.push("**"+PRI[t.priority]+"**");
+
+      if(o.due && t.due) tail.push("`"+dueText(t.due)+"`");
+
+      if(t.status==="doing"||t.status==="hold") tail.push("_"+STAT[t.status]+"_");
+
+      if(o.tags && t.tags.length) tail.push(t.tags.map(x=>"`#"+x+"`").join(" "));
+
+      if(tail.length) line += " — "+tail.join(" ・ ");
+
+      s += line+"\n";
+
+      if(o.subtasks) t.subtasks.forEach(x=>s += "  - ["+(x.done?"x":" ")+"] "+x.title+"\n");
+
+      if(o.note && t.note) s += "  > "+t.note.replace(/\n/g,"\n  > ")+"\n";
+
+    });
+
+    s += "\n";
+
+  });
+
+  return s;
+
+}
+
+ 
+
+/* =====================================================================
+
+   匯出格式 3：郵件 HTML
+
+   兩種風格都用 table + inline style，Outlook / Gmail 貼上不會爆版。
+
+   ===================================================================== */
+
+const MAIL_FONT = "font-family:'Microsoft JhengHei','Segoe UI',Arial,sans-serif;";
+
+function mailRowsPlain(o){
+
+  const g=groupByList(o.tasks);
+
+  let h="";
+
+  g.forEach(grp=>{
+
+    if(g.length>1)
+
+      h+='<tr><td colspan="4" style="'+MAIL_FONT+'font-size:13px;font-weight:bold;'+
+
+         'padding:14px 8px 4px;border-bottom:1px solid #999;">'+esc(grp.list.name)+'</td></tr>';
+
+    grp.items.forEach(t=>{
+
+      const dn=t.status==="done";
+
+      const over = !dn && t.due && dayDiff(t.due,TODAY())<0;
+
+      h+='<tr>'+
+
+        '<td style="'+MAIL_FONT+'font-size:13px;padding:6px 4px 6px 8px;border-bottom:1px solid #e0e0e0;'+
+
+          'width:24px;vertical-align:top;">'+(dn?"&#9745;":"&#9744;")+'</td>'+
+
+        '<td style="'+MAIL_FONT+'font-size:13px;padding:6px 8px;border-bottom:1px solid #e0e0e0;'+
+
+          'vertical-align:top;'+(dn?"color:#999;text-decoration:line-through;":"")+'">'+
+
+          esc(t.title)+
+
+          (o.tags&&t.tags.length?'<span style="color:#777;font-size:12px;"> '+esc(t.tags.map(x=>"#"+x).join(" "))+'</span>':"")+
+
+          (o.subtasks&&t.subtasks.length?'<div style="color:#666;font-size:12px;padding-top:3px;">'+
+
+             t.subtasks.map(s=>(s.done?"&#9745;":"&#9744;")+" "+esc(s.title)).join("<br>")+'</div>':"")+
+
+          (o.note&&t.note?'<div style="color:#777;font-size:12px;padding-top:3px;">'+esc(t.note).replace(/\n/g,"<br>")+'</div>':"")+
+
+        '</td>'+
+
+        (o.priority?'<td style="'+MAIL_FONT+'font-size:12px;padding:6px 8px;border-bottom:1px solid #e0e0e0;'+
+
+          'white-space:nowrap;vertical-align:top;color:#555;">'+(t.priority>=2?esc(PRI[t.priority]):"")+'</td>':"")+
+
+        (o.due?'<td style="'+MAIL_FONT+'font-size:12px;padding:6px 8px;border-bottom:1px solid #e0e0e0;'+
+
+          'white-space:nowrap;vertical-align:top;'+(over?"color:#c00;font-weight:bold;":"color:#555;")+'">'+
+
+          (t.due?esc(dueText(t.due)):"")+'</td>':"")+
+
+      '</tr>';
+
+    });
+
+  });
+
+  return h;
+
+}
+
+function mailRowsColor(o){
+
+  const PC=["#94a3b8","#3b82f6","#f59e0b","#ef4444"];
+
+  const g=groupByList(o.tasks);
+
+  let h="";
+
+  g.forEach(grp=>{
+
+    if(g.length>1)
+
+      h+='<tr><td colspan="2" style="'+MAIL_FONT+'font-size:13px;font-weight:bold;color:'+grp.list.color+';'+
+
+         'padding:16px 0 6px;">&#9632; '+esc(grp.list.name)+'</td></tr>';
+
+    grp.items.forEach(t=>{
+
+      const dn=t.status==="done";
+
+      const over=!dn && t.due && dayDiff(t.due,TODAY())<0;
+
+      let chips="";
+
+      if(o.priority && t.priority>=2)
+
+        chips+='<span style="'+MAIL_FONT+'font-size:11px;color:#fff;background:'+PC[t.priority]+
+
+               ';border-radius:3px;padding:1px 6px;margin-right:5px;">'+PRI[t.priority]+'</span>';
+
+      if(!dn && (t.status==="doing"||t.status==="hold"))
+
+        chips+='<span style="'+MAIL_FONT+'font-size:11px;color:#fff;background:#64748b;'+
+
+               'border-radius:3px;padding:1px 6px;margin-right:5px;">'+STAT[t.status]+'</span>';
+
+      if(o.due && t.due)
+
+        chips+='<span style="'+MAIL_FONT+'font-size:11px;border-radius:3px;padding:1px 6px;margin-right:5px;'+
+
+               (over?'color:#fff;background:#dc2626;':'color:#475569;background:#eef2f6;')+'">'+esc(dueText(t.due))+'</span>';
+
+      if(o.tags) t.tags.forEach(x=>chips+='<span style="'+MAIL_FONT+'font-size:11px;color:#475569;'+
+
+               'background:#eef2f6;border-radius:3px;padding:1px 6px;margin-right:5px;">#'+esc(x)+'</span>');
+
+      h+='<tr>'+
+
+        '<td style="width:22px;padding:5px 0 5px 2px;vertical-align:top;'+MAIL_FONT+'font-size:14px;color:'+
+
+          (dn?"#16a34a":"#94a3b8")+';">'+(dn?"&#10003;":"&#9679;")+'</td>'+
+
+        '<td style="padding:5px 0;vertical-align:top;">'+
+
+          '<div style="'+MAIL_FONT+'font-size:13.5px;'+(dn?"color:#9aa3ad;text-decoration:line-through;":"color:#1f2328;")+'">'+
+
+            esc(t.title)+'</div>'+
+
+          (chips?'<div style="padding-top:3px;line-height:1.9;">'+chips+'</div>':"")+
+
+          (o.subtasks&&t.subtasks.length?'<div style="'+MAIL_FONT+'font-size:12px;color:#64748b;padding-top:2px;">'+
+
+             t.subtasks.map(s=>(s.done?"&#9745;":"&#9744;")+" "+esc(s.title)).join("<br>")+'</div>':"")+
+
+          (o.note&&t.note?'<div style="'+MAIL_FONT+'font-size:12px;color:#64748b;padding-top:2px;'+
+
+             'border-left:2px solid #e2e8f0;padding-left:7px;margin-top:3px;">'+
+
+             esc(t.note).replace(/\n/g,"<br>")+'</div>':"")+
+
+        '</td></tr>';
+
+    });
+
+  });
+
+  return h;
+
+}
+
+function buildMailHtml(o, style){
+
+  const done=o.tasks.filter(t=>t.status==="done").length;
+
+  const over=o.tasks.filter(t=>t.status!=="done"&&t.due&&dayDiff(t.due,TODAY())<0).length;
+
+  const cols = style==="plain" ? (2+(o.priority?1:0)+(o.due?1:0)) : 2;
+
+  const head =
+
+    '<tr><td colspan="'+cols+'" style="'+MAIL_FONT+'font-size:16px;font-weight:bold;padding:0 0 4px;">'+
+
+      esc(o.title)+'</td></tr>'+
+
+    '<tr><td colspan="'+cols+'" style="'+MAIL_FONT+'font-size:12px;color:#666;padding:0 0 10px;">'+
+
+      TODAY()+' ・ 共 '+o.tasks.length+' 項 ・ 已完成 '+done+
+
+      (over?' ・ <span style="color:#c00;font-weight:bold;">逾期 '+over+'</span>':"")+
+
+    '</td></tr>';
+
+  const rows = style==="plain" ? mailRowsPlain(o) : mailRowsColor(o);
+
+  return '<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;'+
+
+         'width:100%;max-width:680px;'+MAIL_FONT+'">'+head+rows+
+
+         '<tr><td colspan="'+cols+'" style="'+MAIL_FONT+'font-size:11px;color:#aaa;padding-top:12px;">'+
+
+         '由 Todolisthtml 匯出</td></tr></table>';
+
+}
+
+ 
+
+/* =====================================================================
+
+   匯出格式 4：CSV
+
+   ===================================================================== */
+
+function buildCsv(o){
+
+  const q=v=>'"'+String(v==null?"":v).replace(/"/g,'""')+'"';
+
+  const head=["清單","標題","狀態","優先級","到期日","標籤","備註","子任務","建立時間","完成時間"];
+
+  const rows=[head.map(q).join(",")];
+
+  o.tasks.forEach(t=>{
+
+    const l=data.lists.find(x=>x.id===t.listId);
+
+    rows.push([ l?l.name:"", t.title, STAT[t.status], PRI[t.priority], t.due||"",
+
+      t.tags.join(" "), t.note,
+
+      t.subtasks.map(s=>(s.done?"[x] ":"[ ] ")+s.title).join(" / "),
+
+      t.createdAt.slice(0,19).replace("T"," "),
+
+      t.completedAt? t.completedAt.slice(0,19).replace("T"," "):""
+
+    ].map(q).join(","));
+
+  });
+
+  return "\ufeff"+rows.join("\r\n");
+
+}
+
+ 
+
+/* =====================================================================
+
+   匯出格式 5：JSON
+
+   ===================================================================== */
+
+function exportData(tasks, full){
+
+  const ids=new Set(tasks.map(t=>t.listId));
+
+  const d={
+
+    app:"Todolisthtml", version:SCHEMA, exportedAt:nowISO(),
+
+    settings:clone(data.settings),
+
+    lists:(full? data.lists : data.lists.filter(l=>ids.has(l.id))).map(clone),
+
+    tasks:tasks.map(clone)
+
+  };
+
+  if(full){ d.trash=clone(data.trash); d.templates=clone(data.templates); }
+
+  return d;
+
+}
+
+ 
+
+/* =====================================================================
+
+   匯出格式 7：分享連結
+
+   把資料壓進網址的 # 後面。有 CompressionStream 就 deflate，沒有就純 base64。
+
+   ===================================================================== */
+
+async function encodeShare(obj){
+
+  const bytes=new TextEncoder().encode(JSON.stringify(obj));
+
+  let out=bytes, flag="r";
+
+  if(window.CompressionStream){
+
+    try{
+
+      const st=new Blob([bytes]).stream().pipeThrough(new CompressionStream("deflate-raw"));
+
+      out=new Uint8Array(await new Response(st).arrayBuffer()); flag="z";
+
+    }catch(e){}
+
+  }
+
+  let bin=""; for(let i=0;i<out.length;i++) bin+=String.fromCharCode(out[i]);
+
+  return flag+btoa(bin).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+
+}
+
+async function decodeShare(code){
+
+  const flag=code[0];
+
+  let b64=code.slice(1).replace(/-/g,"+").replace(/_/g,"/");
+
+  while(b64.length%4) b64+="=";
+
+  const bin=atob(b64);
+
+  let bytes=new Uint8Array(bin.length);
+
+  for(let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
+
+  if(flag==="z"){
+
+    const st=new Blob([bytes]).stream().pipeThrough(new DecompressionStream("deflate-raw"));
+
+    bytes=new Uint8Array(await new Response(st).arrayBuffer());
+
+  }
+
+  return JSON.parse(new TextDecoder().decode(bytes));
+
+}
+
+async function buildShareUrl(tasks){
+
+  const code=await encodeShare(exportData(tasks,false));
+
+  return location.href.split("#")[0]+"#s="+code;
+
+}
+
+/* 開檔時看網址有沒有帶資料 */
+
+async function checkShareHash(){
+
+  const m=location.hash.match(/^#s=(.+)$/);
+
+  if(!m) return;
+
+  try{
+
+    const inc=migrate(await decodeShare(m[1]));
+
+    try{ history.replaceState(null,"",location.href.split("#")[0]); }
+
+    catch(e){ location.hash=""; }
+
+    importDialog(inc,"分享連結");
+
+  }catch(e){ toast("⚠ 分享連結解不開："+e.message); }
+
+}
+
+ 
+
+/* =====================================================================
+
+   匯出格式 6：獨立 HTML 檢視器（自足單檔、唯讀、不連外）
+
+   ===================================================================== */
+
+function buildViewer(o){
+
+  const payload=JSON.stringify({
+
+    title:o.title, date:TODAY(),
+
+    groups: groupByList(o.tasks).map(g=>({
+
+      name:g.list.name, color:g.list.color,
+
+      items:g.items.map(t=>({
+
+        title:t.title, done:t.status==="done", status:STAT[t.status],
+
+        pri:t.priority, priName:PRI[t.priority],
+
+        due:o.due?t.due:null, dueText:o.due&&t.due?dueText(t.due):"",
+
+        over:t.status!=="done"&&t.due?dayDiff(t.due,TODAY())<0:false,
+
+        tags:o.tags?t.tags:[], note:o.note?t.note:"",
+
+        subs:o.subtasks?t.subtasks.map(s=>({t:s.title,d:s.done})):[]
+
+      }))
+
+    }))
+
+  }).replace(/</g,"\\u003c");
+
+ 
+
+  return '<!DOCTYPE html>\n<html lang="zh-TW"><head><meta charset="utf-8">'+
+
+  '<meta name="viewport" content="width=device-width,initial-scale=1">'+
+
+  '<title>'+esc(o.title)+'</title><style>'+
+
+  'body{margin:0;background:#f4f6f8;color:#1f2328;font:14px/1.6 "Microsoft JhengHei","Segoe UI",sans-serif;padding:24px}'+
+
+  '.w{max-width:760px;margin:0 auto}h1{font-size:19px;margin:0 0 4px}'+
+
+  '.sub{color:#6b7280;font-size:12px;margin-bottom:16px}'+
+
+  'h2{font-size:13px;color:#6b7280;margin:20px 0 8px;letter-spacing:.5px}'+
+
+  '.t{background:#fff;border:1px solid #e2e6ea;border-left:3px solid #94a3b8;border-radius:8px;'+
+
+    'padding:9px 12px;margin-bottom:6px;display:flex;gap:10px;align-items:flex-start}'+
+
+  '.t.done{opacity:.55}.t.done .ti{text-decoration:line-through;color:#6b7280}'+
+
+  '.cb{width:16px;height:16px;flex:0 0 16px;margin-top:3px;border:1.5px solid #94a3b8;border-radius:5px;'+
+
+    'display:inline-flex;align-items:center;justify-content:center;font-size:11px;color:transparent;cursor:pointer}'+
+
+  '.cb.on{background:#16a34a;border-color:#16a34a;color:#fff}'+
+
+  '.m{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;font-size:11.5px;color:#6b7280}'+
+
+  '.m span{border:1px solid #e2e6ea;border-radius:99px;padding:0 7px}'+
+
+  '.m .over{color:#dc2626;border-color:#dc2626;font-weight:600}'+
+
+  '.n{white-space:pre-wrap;color:#6b7280;font-size:12px;margin-top:4px;border-left:2px solid #e2e6ea;padding-left:7px}'+
+
+  '.s{font-size:12.5px;color:#4b5563;margin-top:3px}'+
+
+  '.ft{color:#9aa3ad;font-size:11px;margin-top:22px;text-align:center}'+
+
+  '@media print{body{background:#fff;padding:0}.t{break-inside:avoid}}'+
+
+  '</style></head><body><div class="w" id="w"></div>'+
+
+  '<div class="ft">由 Todolisthtml 匯出 ・ 此檔為唯讀快照，勾選不會被儲存</div>'+
+
+  '<script>var D='+payload+';'+
+
+  'var PC=["#94a3b8","#3b82f6","#f59e0b","#ef4444"];'+
+
+  'function e(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){'+
+
+    'return({"&":"&amp;","<":"&lt;",">":"&gt;","\\"":"&quot;"})[c]})}'+
+
+  'var n=0,d=0;D.groups.forEach(function(g){g.items.forEach(function(t){n++;if(t.done)d++})});'+
+
+  'var h="<h1>"+e(D.title)+"</h1><div class=\\"sub\\">"+D.date+" ・ 共 "+n+" 項 ・ 已完成 "+d+"</div>";'+
+
+  'D.groups.forEach(function(g){'+
+
+    'if(D.groups.length>1)h+="<h2 style=\\"color:"+g.color+"\\">■ "+e(g.name)+"</h2>";'+
+
+    'g.items.forEach(function(t){'+
+
+      'var m="";'+
+
+      'if(t.pri>=2)m+="<span style=\\"color:"+PC[t.pri]+";border-color:"+PC[t.pri]+"\\">⚑"+t.priName+"</span>";'+
+
+      'if(t.dueText)m+="<span class=\\""+(t.over?"over":"")+"\\">⏰"+e(t.dueText)+"</span>";'+
+
+      't.tags.forEach(function(x){m+="<span>#"+e(x)+"</span>"});'+
+
+      'var s="";t.subs.forEach(function(x){s+="<div class=\\"s\\">└ "+(x.d?"☑":"☐")+" "+e(x.t)+"</div>"});'+
+
+      'h+="<div class=\\"t"+(t.done?" done":"")+"\\" style=\\"border-left-color:"+PC[t.pri]+"\\">"+'+
+
+        '"<span class=\\"cb"+(t.done?" on":"")+"\\" onclick=\\"this.classList.toggle(\'on\')\\">✔</span>"+'+
+
+        '"<div><div class=\\"ti\\">"+e(t.title)+"</div>"+'+
+
+        '(m?"<div class=\\"m\\">"+m+"</div>":"")+s+'+
+
+        '(t.note?"<div class=\\"n\\">"+e(t.note)+"</div>":"")+"</div></div>"});'+
+
+  '});'+
+
+  'document.getElementById("w").innerHTML=h;'+
+
+  '<\/script></body></html>';
+
+}
+
+ 
+
+/* =====================================================================
+
+   匯出對話框
+
+   ===================================================================== */
+
+const FORMATS={
+
+  text:  {name:"純文字",         hint:"貼 Teams／LINE／記事本",      ext:"txt",  mime:"text/plain"},
+
+  md:    {name:"Markdown",       hint:"貼 GitHub／Obsidian，會變核取方塊", ext:"md", mime:"text/markdown"},
+
+  mailP: {name:"郵件 HTML・簡潔表格", hint:"黑白表格，各家信箱最穩",   ext:"html", mime:"text/html"},
+
+  mailC: {name:"郵件 HTML・彩色標籤", hint:"好看，舊版 Outlook 可能掉色", ext:"html", mime:"text/html"},
+
+  csv:   {name:"CSV",            hint:"丟進 Excel，含 BOM 不亂碼",   ext:"csv",  mime:"text/csv"},
+
+  json:  {name:"JSON",           hint:"完整備份／換電腦／給同事接手", ext:"json", mime:"application/json"},
+
+  viewer:{name:"獨立 HTML 檢視器", hint:"自足單檔，對方雙擊就能看",   ext:"html", mime:"text/html"},
+
+  share: {name:"分享連結（URL）",  hint:"清單壓進網址，對方也要有這個檔", ext:"txt",  mime:"text/plain"}
+
+};
+
+let expOpt={ fmt:"text", scope:"view", undone:true,
+
+             due:true, priority:true, tags:true, subtasks:true, note:false };
+
+ 
+
+function exportDialog(){
+
+  const body=
+
+   '<div class="row">'+
+
+    '<div class="col" style="max-width:250px">'+
+
+      '<h5>格式</h5>'+
+
+      Object.keys(FORMATS).map(k=>'<label class="opt"><input type="radio" name="fmt" value="'+k+'"'+
+
+        (expOpt.fmt===k?" checked":"")+'><span>'+FORMATS[k].name+'<small>'+FORMATS[k].hint+'</small></span></label>').join("")+
+
+      '<h5 style="margin-top:12px">範圍</h5>'+
+
+      '<label class="opt"><input type="radio" name="scope" value="view"'+(expOpt.scope==="view"?" checked":"")+
+
+        '><span>目前畫面（含搜尋／篩選）</span></label>'+
+
+      '<label class="opt"><input type="radio" name="scope" value="list"'+(expOpt.scope==="list"?" checked":"")+
+
+        '><span>目前清單</span></label>'+
+
+      '<label class="opt"><input type="radio" name="scope" value="all"'+(expOpt.scope==="all"?" checked":"")+
+
+        '><span>全部清單</span></label>'+
+
+      '<label class="opt" style="margin-top:6px"><input type="checkbox" id="oUndone"'+(expOpt.undone?" checked":"")+
+
+        '><span>只含未完成</span></label>'+
+
+      '<h5 style="margin-top:12px">內容</h5>'+
+
+      '<label class="opt"><input type="checkbox" data-o="due"'+(expOpt.due?" checked":"")+'><span>到期日</span></label>'+
+
+      '<label class="opt"><input type="checkbox" data-o="priority"'+(expOpt.priority?" checked":"")+'><span>優先級</span></label>'+
+
+      '<label class="opt"><input type="checkbox" data-o="tags"'+(expOpt.tags?" checked":"")+'><span>標籤</span></label>'+
+
+      '<label class="opt"><input type="checkbox" data-o="subtasks"'+(expOpt.subtasks?" checked":"")+'><span>子任務</span></label>'+
+
+      '<label class="opt"><input type="checkbox" data-o="note"'+(expOpt.note?" checked":"")+'><span>備註</span></label>'+
+
+    '</div>'+
+
+    '<div class="col"><h5 id="pvTitle">預覽</h5><div id="preview"></div></div>'+
+
+   '</div>';
+
+ 
+
+  const m=modal("匯出", body, [
+
+    {txt:"複製到剪貼簿", cls:"btn primary", keep:true, act:doCopy},
+
+    {txt:"下載檔案",     cls:"btn",         keep:true, act:doDownload},
+
+    {grow:true},
+
+    {txt:"關閉", cls:"btn"}
+
+  ]);
+
+ 
+
+  function readOpts(){
+
+    expOpt.fmt=$('input[name="fmt"]:checked',m).value;
+
+    expOpt.scope=$('input[name="scope"]:checked',m).value;
+
+    expOpt.undone=$("#oUndone",m).checked;
+
+    $$("[data-o]",m).forEach(c=>expOpt[c.dataset.o]=c.checked);
+
+  }
+
+  function payload(){
+
+    readOpts();
+
+    const tasks=collect(expOpt.scope, expOpt.undone);
+
+    return { o:{ title:scopeTitle(expOpt.scope), tasks,
+
+                 due:expOpt.due, priority:expOpt.priority, tags:expOpt.tags,
+
+                 subtasks:expOpt.subtasks, note:expOpt.note }, tasks };
+
+  }
+
+  async function build(){
+
+    const {o,tasks}=payload();
+
+    switch(expOpt.fmt){
+
+      case "text":  return {text:buildText(o)};
+
+      case "md":    return {text:buildMarkdown(o)};
+
+      case "mailP": return {text:buildText(o), html:buildMailHtml(o,"plain")};
+
+      case "mailC": return {text:buildText(o), html:buildMailHtml(o,"color")};
+
+      case "csv":   return {text:buildCsv(o)};
+
+      case "json":  return {text:JSON.stringify(exportData(tasks, expOpt.scope==="all"&&!expOpt.undone),null,2)};
+
+      case "viewer":return {text:buildViewer(o), viewer:true};
+
+      case "share": {
+
+        const url=await buildShareUrl(tasks);
+
+        return {text:url, share:true, tooLong:url.length>8000};
+
+      }
+
+    }
+
+  }
+
+  let seq=0;
+
+  async function refresh(){
+
+    const my=++seq;
+
+    const pv=$("#preview",m);
+
+    const n=payload().tasks.length;
+
+    $("#pvTitle",m).textContent="預覽（"+n+" 項）";
+
+    if(expOpt.fmt==="share"){ pv.classList.remove("rich"); pv.textContent="產生中…"; }
+
+    const r=await build();
+
+    if(my!==seq) return;                      // 使用者又改了選項，這次結果作廢
+
+    if(r.html){ pv.classList.add("rich"); pv.innerHTML=r.html; }
+
+    else if(r.viewer){ pv.classList.remove("rich"); pv.textContent="（獨立 HTML 檢視器，共 "+r.text.length+" 字元）\n\n請按「下載檔案」產生單檔網頁，對方雙擊即可開啟。"; }
+
+    else if(r.share){
+
+      pv.classList.remove("rich");
+
+      pv.textContent = r.text + "\n\n（"+r.text.length+" 字元）\n\n"+
+
+        "・對方也要有同一份 index.html，打開這個連結才會跳出匯入視窗\n"+
+
+        "・連結本身就是資料，不會上傳到任何伺服器\n"+
+
+        (r.tooLong? "\n⚠ 這個連結太長了，很多聊天軟體與信箱會截斷。建議改用 JSON 或獨立 HTML 檢視器。":"");
+
+    }
+
+    else { pv.classList.remove("rich"); pv.textContent=r.text; }
+
+  }
+
+  async function doCopy(){
+
+    const r=await build();
+
+    if(r.html) copyRich(r.html, r.text);
+
+    else copyText(r.text);
+
+  }
+
+  async function doDownload(){
+
+    const r=await build(); const f=FORMATS[expOpt.fmt];
+
+    const base = expOpt.fmt==="json" ? "Todolisthtml" : scopeTitle(expOpt.scope).replace(/[\\/:*?"<>|]/g,"_");
+
+    let content=r.text;
+
+    if(r.html) content='<!DOCTYPE html><html lang="zh-TW"><head><meta charset="utf-8"><title>'+
+
+      esc(scopeTitle(expOpt.scope))+'</title></head><body style="margin:16px">'+r.html+'</body></html>';
+
+    download(base+"-"+stamp()+"."+f.ext, content, f.mime);
+
+  }
+
+  m.addEventListener("change", refresh);
+
+  refresh();
+
+}
+
+ 
+
+/* ---------- 剪貼簿與下載 ---------- */
+
+function copyText(text){
+
+  const done=()=>toast("已複製純文字");
+
+  if(navigator.clipboard && navigator.clipboard.writeText)
+
+    navigator.clipboard.writeText(text).then(done, ()=>fallbackCopy(text,null,done));
+
+  else fallbackCopy(text,null,done);
+
+}
+
+function copyRich(html,text){
+
+  const done=()=>toast("已複製（貼到信件會保留格式）");
+
+  if(window.ClipboardItem && navigator.clipboard && navigator.clipboard.write){
+
+    const item=new ClipboardItem({
+
+      "text/html": new Blob([html],{type:"text/html"}),
+
+      "text/plain":new Blob([text],{type:"text/plain"})
+
+    });
+
+    navigator.clipboard.write([item]).then(done, ()=>fallbackCopy(text,html,done));
+
+  } else fallbackCopy(text,html,done);
+
+}
+
+function fallbackCopy(text,html,done){
+
+  const box=document.createElement("div");
+
+  box.contentEditable="true";
+
+  box.style.cssText="position:fixed;left:-9999px;top:0;white-space:pre-wrap";
+
+  if(html) box.innerHTML=html; else box.textContent=text;
+
+  document.body.appendChild(box);
+
+  const r=document.createRange(); r.selectNodeContents(box);
+
+  const s=getSelection(); s.removeAllRanges(); s.addRange(r);
+
+  let ok=false; try{ ok=document.execCommand("copy"); }catch(e){}
+
+  s.removeAllRanges(); box.remove();
+
+  ok? done() : toast("⚠ 瀏覽器擋住剪貼簿，請改用「下載檔案」");
+
+}
+
+function download(name, content, mime){
+
+  try{
+
+    const blob=new Blob([content],{type:(mime||"text/plain")+";charset=utf-8"});
+
+    const a=document.createElement("a");
+
+    a.href=URL.createObjectURL(blob); a.download=name;
+
+    document.body.appendChild(a); a.click();
+
+    setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },1000);
+
+    toast("已下載 "+name);
+
+  }catch(e){ toast("⚠ 下載失敗："+e.message); }
+
+}
+
+ 
+
+/* =====================================================================
+
+   匯入
+
+   ===================================================================== */
+
+$("#fileInput").addEventListener("change", e=>{
+
+  const f=e.target.files[0]; if(f) readFile(f); e.target.value="";
+
+});
+
+["dragenter","dragover"].forEach(ev=>document.addEventListener(ev, e=>{
+
+  if(dragId) return;
+
+  if(e.dataTransfer && Array.from(e.dataTransfer.types||[]).includes("Files")){
+
+    e.preventDefault(); $("#drop").classList.add("on");
+
+  }
+
+}));
+
+document.addEventListener("dragleave", e=>{ if(e.relatedTarget===null) $("#drop").classList.remove("on"); });
+
+document.addEventListener("drop", e=>{
+
+  if(!e.dataTransfer||!e.dataTransfer.files.length) return;
+
+  e.preventDefault(); $("#drop").classList.remove("on");
+
+  readFile(e.dataTransfer.files[0]);
+
+});
+
+function readFile(file){
+
+  const r=new FileReader();
+
+  r.onload=()=>{
+
+    let inc;
+
+    try{ inc=migrate(JSON.parse(r.result)); }
+
+    catch(err){ toast("⚠ 不是有效的 Todolisthtml JSON："+err.message); return; }
+
+    importDialog(inc, file.name);
+
+  };
+
+  r.readAsText(file,"utf-8");
+
+}
+
+function importDialog(inc, fname){
+
+  const body=
+
+    '<div style="font-size:13px;margin-bottom:12px">'+
+
+      '檔案：<b>'+esc(fname)+'</b><br>'+
+
+      '內含 <b>'+inc.lists.length+'</b> 個清單、<b>'+inc.tasks.length+'</b> 個項目'+
+
+      (inc.exportedAt?'<br>匯出時間：'+esc(inc.exportedAt.slice(0,16).replace("T"," ")):"")+
+
+    '</div>'+
+
+    '<label class="opt"><input type="radio" name="imode" value="new" checked><span>匯入成新清單'+
+
+      '<small>最安全：清單名稱後面加「(匯入)」，完全不動現有資料</small></span></label>'+
+
+    '<label class="opt"><input type="radio" name="imode" value="merge"><span>合併'+
+
+      '<small>相同 id 的項目以較新的更新時間為準，其餘新增</small></span></label>'+
+
+    '<label class="opt"><input type="radio" name="imode" value="replace"><span>取代全部'+
+
+      '<small style="color:var(--danger)">現有 '+data.tasks.length+' 個項目會被清掉（Ctrl+Z 可復原）</small></span></label>';
+
+  const m=modal("匯入 JSON", body, [
+
+    {grow:true},
+
+    {txt:"取消", cls:"btn"},
+
+    {txt:"匯入", cls:"btn primary", act:()=>{
+
+      const mode=$('input[name="imode"]:checked',m).value;
+
+      doImport(inc,mode);
+
+    }}
+
+  ], "sm");
+
+}
+
+function doImport(inc, mode){
+
+  push();
+
+  if(mode==="replace"){
+
+    data=inc; ui.view="all"; ui.listId=null; ui.sel=null;
+
+  } else if(mode==="new"){
+
+    const map={};
+
+    inc.lists.forEach(l=>{
+
+      const nl={id:uid(), name:l.name+"(匯入)", color:l.color};
+
+      map[l.id]=nl.id; data.lists.push(nl);
+
+    });
+
+    let ord=data.tasks.reduce((a,t)=>Math.max(a,t.order),-1);
+
+    inc.tasks.forEach(t=>{
+
+      const nt=clone(t); nt.id=uid(); nt.listId=map[t.listId]||data.lists[0].id;
+
+      nt.order=++ord; data.tasks.push(nt);
+
+    });
+
+  } else {
+
+    inc.lists.forEach(l=>{
+
+      const ex=data.lists.find(x=>x.id===l.id);
+
+      if(ex){ ex.name=l.name; ex.color=l.color; } else data.lists.push(clone(l));
+
+    });
+
+    let ord=data.tasks.reduce((a,t)=>Math.max(a,t.order),-1);
+
+   inc.tasks.forEach(t=>{
+
+      const ex=data.tasks.find(x=>x.id===t.id);
+
+      if(ex){ if((t.updatedAt||"")>(ex.updatedAt||"")) Object.assign(ex, clone(t)); }
+
+      else { const nt=clone(t); nt.order=++ord; data.tasks.push(nt); }
+
+    });
+
+  }
+
+  data=migrate(data); save(); render();
+
+  toast("匯入完成，共 "+inc.tasks.length+" 個項目");
+
+}
+
+ 
+
+/* =====================================================================
+
+   說明
+
+   ===================================================================== */
+
+function helpDialog(){
+
+  const rows=[
+
+    ["<span class='kbd'>Enter</span>","在輸入框新增待辦"],
+
+    ["<span class='kbd'>N</span>","跳到新增輸入框"],
+
+    ["<span class='kbd'>/</span>","跳到搜尋"],
+
+    ["<span class='kbd'>Ctrl</span>+<span class='kbd'>Z</span> / <span class='kbd'>Ctrl</span>+<span class='kbd'>Y</span>","復原 / 重做"],
+
+    ["<span class='kbd'>Ctrl</span>+<span class='kbd'>E</span>","開啟匯出"],
+
+    ["<span class='kbd'>Ctrl</span>+<span class='kbd'>B</span>","顯示／隱藏側欄"],
+
+    ["<span class='kbd'>Ctrl</span>+<span class='kbd'>S</span>","立即備份到資料夾"],
+
+    ["<span class='kbd'>Ctrl</span>+<span class='kbd'>Alt</span>+<span class='kbd'>S</span>","直接下載 JSON 備份"],
+
+    ["<span class='kbd'>Delete</span>","刪除選取的項目"],
+
+    ["<span class='kbd'>Esc</span>","關閉明細／對話框"],
+
+    ["<span class='kbd'>?</span>","開啟這個說明"]
+
+  ];
+
+  const body=
+
+    '<h5 style="margin:0 0 6px;color:var(--faint)">快速語法（打在新增框）</h5>'+
+
+    '<table class="keys">'+
+
+      '<tr><td><span class="kbd">!</span> <span class="kbd">!!</span></td><td>優先級：高／緊急（不加＝中）</td></tr>'+
+
+      '<tr><td><span class="kbd">#標籤</span></td><td>加標籤，可多個</td></tr>'+
+
+      '<tr><td><span class="kbd">@今天</span> <span class="kbd">@明天</span> <span class="kbd">@後天</span> <span class="kbd">@下週</span> <span class="kbd">@週五</span></td><td>相對到期日</td></tr>'+
+
+      '<tr><td><span class="kbd">@9/10</span> <span class="kbd">@2026-09-10</span> <span class="kbd">@+3</span></td><td>指定日期／幾天後</td></tr>'+
+
+      '<tr><td><span class="kbd">^清單名</span></td><td>丟到指定清單，不存在就自動建立</td></tr>'+
+
+      '<tr><td><span class="kbd">*每天</span> <span class="kbd">*工作日</span> <span class="kbd">*每週</span> <span class="kbd">*每兩週</span> <span class="kbd">*每月</span></td><td>重複任務：完成後自動排下一次</td></tr>'+
+
+    '</table>'+
+
+    '<div style="font-size:12px;color:var(--faint);margin:6px 0 16px">'+
+
+      '例：<code>對帳程式測試 !! #FPS @9/10 ^上線準備</code><br>→ 緊急、標籤 FPS、9/10 到期、丟進「上線準備」清單</div>'+
+
+    '<h5 style="margin:0 0 6px;color:var(--faint)">快捷鍵</h5>'+
+
+    '<table class="keys">'+rows.map(r=>'<tr><td style="width:170px">'+r[0]+'</td><td>'+r[1]+'</td></tr>').join("")+'</table>'+
+
+    '<h5 style="margin:16px 0 6px;color:var(--faint)">其他</h5>'+
+
+    '<div style="font-size:13px;line-height:1.9">'+
+
+      '・拖曳項目可排序；拖到左側清單上＝搬移到該清單<br>'+
+
+      '・資料只存在這台電腦的瀏覽器（localStorage），不上傳任何地方<br>'+
+
+      '・把 JSON 檔直接拖進視窗就能匯入<br>'+
+
+      '・每天第一次開啟會自動留一份快照，最多保留 5 份（<b>存在瀏覽器裡</b>，清除瀏覽資料會一起消失）<br>'+
+
+      '・<b>自動備份</b>可把資料寫到你指定的資料夾，固定只有 2 個檔（最新＋前一份），清除瀏覽資料也還在<br>'+
+
+      '・刪除的項目會進<b>回收桶</b>放 '+TRASH_DAYS+' 天，可還原或永久刪除，逾期自動清掉<br>'+
+
+      '・側欄「<b>範本</b>」有五組起手式，也可以把目前畫面存成自己的範本<br>'+
+
+      '・重複任務<b>勾完成的當下就長出下一次</b>，原本那筆留著當紀錄<br>'+
+
+      '・匯出選「<b>分享連結</b>」會把清單壓進網址，對方也要有同一份 index.html 才打得開<br>'+
+
+      '・Ctrl+P 可直接列印（會自動隱藏側欄與按鈕）'+
+
+    '</div>';
+
+  modal("說明", body, [{grow:true},{txt:"自動備份設定…",cls:"btn",act:()=>{ AutoBackup.settings(); }},{txt:"知道了",cls:"btn primary"}]);
+
+}
+
+ 
+
+/* =========================================================================
+
+   AutoBackup — 自動備份到你選的本機資料夾
+
+   清除瀏覽資料 / 換瀏覽器 / 無痕模式都不會弄丟這份備份。
+
+ 
+
+   實測結論（2026-09-06，Edge 109 + Chrome 151，Playwright）：
+
+     file:// 是 secure context，showDirectoryPicker / showSaveFilePicker 皆可用。
+
+   執行期三分支，自己判斷不用問人：
+
+     A. handle 讀得回且 queryPermission = granted → 靜默覆寫，資料夾固定 2 個檔
+
+     B. handle 讀得回但 = prompt                  → 顯示一顆按鈕，點一次續用
+
+     C. 沒 handle / API 不支援 / 使用者選下載模式 → 下載模式，一天最多一個檔
+
+ 
+
+   對外只有四個入口：
+
+     AutoBackup.init(cfg)   啟動
+
+     AutoBackup.markDirty() 資料有變動時呼叫（很便宜，可以每次存檔都叫）
+
+     AutoBackup.now()       立即備份
+
+     AutoBackup.settings()  開設定對話框
+
+ 
+
+   cfg: { ns, appName, collect, intervalMs, toast,
+
+          summary(d)  → 給人看的一行摘要，例如 "12 個項目"
+
+          isEmpty(d)  → 這份資料算不算空的（空的一律不備份，見下）
+
+          restore(d)  → 用這份資料覆蓋目前資料 }
+
+ 
+
+   兩道防呆，理由是同一個情境：清除瀏覽資料後工具是空的、授權也沒了，
+
+   使用者重新指定資料夾時，絕不能拿空資料蓋掉他僅剩的那份備份。
+
+     1. 空資料一律不寫（isEmpty）。
+
+     2. 選到的資料夾裡已經有備份 → 先停下來問，不自動寫。
+
+   ========================================================================= */
+
+const AutoBackup = (function () {
+
+  "use strict";
+
+ 
+
+  let cfg = null;                 // { ns, appName, collect, intervalMs, toast }
+
+  let dirHandle = null;           // FileSystemDirectoryHandle
+
+  let mode = 'unset';             // unset | dir | download | off
+
+  let meta = {};                  // 存 localStorage，被清掉也只是多備份一次
+
+  let dirty = false;
+
+  let busy = false;
+
+  let barEl = null;
+
+  let paused = false;             // 等使用者決定「還原還是覆蓋」時，暫停一切自動寫入
+
+ 
+
+  const HAS_FSA = typeof window.showDirectoryPicker === 'function';
+
+  const DAY = 86400000;
+
+ 
+
+  /* ---------- meta（localStorage；清掉不影響正確性） ---------- */
+
+  const mkey = () => cfg.ns + '.backup.meta';
+
+  function loadMeta() {
+
+    try { meta = JSON.parse(localStorage.getItem(mkey()) || '{}'); }
+
+    catch (e) { meta = {}; }
+
+    if (!meta || typeof meta !== 'object') meta = {};
+
+  }
+
+  function saveMeta() {
+
+    try { localStorage.setItem(mkey(), JSON.stringify(meta)); } catch (e) {}
+
+  }
+
+ 
+
+  /* ---------- 「還沒備份」旗標 ----------
+
+     關窗時寫檔是 async，瀏覽器不保證跑得完；但 localStorage 是同步的，一定寫得進去。
+
+     所以關窗只負責記旗標，真正補備份留到下次開啟 —— 那時候要多久有多久。
+
+     旗標只有備份成功才會清掉，所以「寫到一半被關掉」也不會漏。 */
+
+  const pkey = () => cfg.ns + '.backup.pending';
+
+  function setPending() {
+
+    if (mode !== 'dir' && mode !== 'download') return;  // 沒設定／已關閉就別留旗標，不然會卡住
+
+    try { localStorage.setItem(pkey(), '1'); } catch (e) {}
+
+  }
+
+  function clearPending() { try { localStorage.removeItem(pkey()); } catch (e) {} }
+
+  function isPending()    { try { return localStorage.getItem(pkey()) === '1'; } catch (e) { return false; } }
+
+ 
+
+  /* ---------- handle 只能存 IndexedDB（結構化複製，localStorage 放不下） ---------- */
+
+  function hdb() {
+
+    return new Promise((res, rej) => {
+
+      let r;
+
+      try { r = indexedDB.open(cfg.ns + '.backup', 1); }
+
+      catch (e) { return rej(e); }
+
+      r.onupgradeneeded = () => { if (!r.result.objectStoreNames.contains('kv')) r.result.createObjectStore('kv'); };
+
+      r.onsuccess = () => res(r.result);
+
+      r.onerror = () => rej(r.error);
+
+    });
+
+  }
+
+  async function hput(k, v) {
+
+    const db = await hdb();
+
+    return new Promise((res, rej) => {
+
+      const t = db.transaction('kv', 'readwrite');
+
+      t.objectStore('kv').put(v, k);
+
+      t.oncomplete = res; t.onerror = () => rej(t.error);
+
+    });
+
+  }
+
+  async function hget(k) {
+
+    const db = await hdb();
+
+    return new Promise((res, rej) => {
+
+      const t = db.transaction('kv', 'readonly');
+
+      const q = t.objectStore('kv').get(k);
+
+      q.onsuccess = () => res(q.result);
+
+      q.onerror = () => rej(q.error);
+
+    });
+
+  }
+
+ 
+
+  /* ---------- 小工具 ---------- */
+
+  function hash(s) {                       // FNV-1a，只用來判斷「資料有沒有真的變」
+
+    let h = 0x811c9dc5;
+
+    for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = (h * 0x01000193) >>> 0; }
+
+    return h.toString(16);
+
+  }
+
+  function today() {
+
+    const d = new Date(), p = n => String(n).padStart(2, '0');
+
+    return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+
+  }
+
+  const fileName = () => cfg.appName + '-backup.json';
+
+  const prevName = () => cfg.appName + '-backup-prev.json';
+
+  const dayName  = () => cfg.appName + '-backup-' + today() + '.json';
+
+ 
+
+  // 備份檔就是工具自己的匯出格式，多掛一個 _backup 註記而已 —
+
+  // 這樣它可以被「匯入 JSON」直接吃下去，不需要任何轉檔。
+
+  function stamp(d) {
+
+    const s = { _backup: { app: cfg.appName, at: new Date().toISOString(), by: 'AutoBackup' } };
+
+    const out = (d && typeof d === 'object' && !Array.isArray(d))
+
+      ? Object.assign({}, d, s)
+
+      : Object.assign({ data: d }, s);
+
+    return JSON.stringify(out);
+
+  }
+
+ 
+
+  // 讀回備份資料夾裡現有的那份（沒有就回 null）。
+
+  // 資料夾 handle 是讀寫的，所以「指定完資料夾後讀回自己存的 JSON」完全做得到。
+
+  async function readBackup(dir, which) {
+
+    try {
+
+      const fh = await dir.getFileHandle(which || fileName());
+
+      const txt = await (await fh.getFile()).text();
+
+      return txt ? JSON.parse(txt) : null;
+
+    } catch (e) { return null; }
+
+  }
+
+ 
+
+  /* ---------- 寫入：資料夾模式（固定兩個檔，永遠不會長大） ---------- */
+
+  async function writeDir(text) {
+
+    // 先把現有的那份挪成 -prev，再覆寫最新的那份
+
+    try {
+
+      const cur = await dirHandle.getFileHandle(fileName());
+
+      const old = await (await cur.getFile()).text();
+
+      if (old) {
+
+        const ph = await dirHandle.getFileHandle(prevName(), { create: true });
+
+        const pw = await ph.createWritable();
+
+        await pw.write(old); await pw.close();
+
+      }
+
+    } catch (e) { /* 第一次備份沒有舊檔，正常 */ }
+
+    const fh = await dirHandle.getFileHandle(fileName(), { create: true });
+
+    const w = await fh.createWritable();
+
+    await w.write(text); await w.close();
+
+  }
+
+ 
+
+  /* ---------- 寫入：下載模式（一天一個檔） ---------- */
+
+  function writeDownload(text) {
+
+    const blob = new Blob([text], { type: 'application/json;charset=utf-8' });
+
+    const a = document.createElement('a');
+
+    a.href = URL.createObjectURL(blob);
+
+    a.download = dayName();
+
+    document.body.appendChild(a); a.click();
+
+    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+
+  }
+
+ 
+
+  /* ---------- 核心：該不該備份、怎麼備份 ---------- */
+
+  async function run(reason) {
+
+    if (busy || paused || mode === 'off' || mode === 'unset') return false;
+
+    busy = true;
+
+    try {
+
+      const d = await cfg.collect();
+
+ 
+
+      // 防呆一：空資料一律不備份。
+
+      // 清除瀏覽資料後工具是空的，這時候寫下去就等於把僅存的備份洗掉。
+
+      if (cfg.isEmpty && cfg.isEmpty(d)) {
+
+        if (reason === 'manual') note('目前沒有資料，不需要備份');
+
+        dirty = false;
+
+        clearPending();
+
+        return false;
+
+      }
+
+ 
+
+      const text = stamp(d);
+
+      const h = hash(text);
+
+      // 資料沒真的變就不寫，省得覆蓋掉好的備份、也省下載檔
+
+      if (reason !== 'manual' && h === meta.lastHash) { dirty = false; clearPending(); return false; }
+
+ 
+
+      if (mode === 'dir') {
+
+        if (!dirHandle) { showBar('lost'); return false; }
+
+        const perm = await dirHandle.queryPermission({ mode: 'readwrite' });
+
+        if (perm !== 'granted') { showBar('prompt'); return false; }
+
+        await writeDir(text);
+
+      } else {
+
+        // 下載模式：一天一個檔，同一天內只寫第一次
+
+        if (reason !== 'manual' && meta.lastDay === today()) { dirty = false; clearPending(); return false; }
+
+        writeDownload(text);
+
+        meta.lastDay = today();
+
+      }
+
+      meta.lastHash = h;
+
+      meta.lastAt = Date.now();
+
+      meta.size = text.length;
+
+      saveMeta();
+
+      dirty = false;
+
+      clearPending();
+
+      hideBar();
+
+      return true;
+
+    } catch (e) {
+
+      console.warn('[AutoBackup] 失敗:', e);
+
+      if (mode === 'dir' && (e.name === 'NotAllowedError' || e.name === 'NotFoundError')) showBar('lost');
+
+      return false;
+
+    } finally { busy = false; }
+
+  }
+
+ 
+
+  function due() {
+
+    if (!meta.lastAt) return true;
+
+    return Date.now() - meta.lastAt >= (cfg.intervalMs || DAY);
+
+  }
+
+ 
+
+  /* ---------- 提示列（自帶樣式，不依賴各工具的 CSS） ---------- */
+
+  function killBar() { if (barEl) { barEl.remove(); barEl = null; } }
+
+  function hideBar() { killBar(); }
+
+  function mkBtn(label, primary, fn) {
+
+    const b = document.createElement('button');
+
+    b.textContent = label;
+
+    b.style.cssText = 'font:inherit;padding:5px 12px;margin-left:8px;border-radius:6px;cursor:pointer;border:1px solid ' +
+
+      (primary ? '#2563eb;background:#2563eb;color:#fff' : 'rgba(0,0,0,.25);background:#fff;color:#333');
+
+    b.onclick = fn;
+
+    return b;
+
+  }
+
+  function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+
+ 
+
+  function showBar(kind) {
+
+    killBar();
+
+    const bar = document.createElement('div');
+
+    bar.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:99999;background:#fef3c7;' +
+
+      'border-top:1px solid #f59e0b;color:#7c2d12;padding:10px 14px;font:14px/1.5 system-ui,sans-serif;' +
+
+      'display:flex;align-items:center;flex-wrap:wrap;gap:4px;box-shadow:0 -2px 8px rgba(0,0,0,.08)';
+
+    const msg = document.createElement('span');
+
+    msg.style.cssText = 'flex:1;min-width:220px';
+
+    bar.appendChild(msg);
+
+ 
+
+    if (kind === 'setup') {
+
+     msg.innerHTML = '<b>還沒設定自動備份。</b>資料目前只存在這個瀏覽器裡，' +
+
+        '清除瀏覽資料就會全部消失。選一個資料夾，之後它會自動把備份寫進去。';
+
+      if (HAS_FSA) bar.appendChild(mkBtn('選擇備份資料夾', true, chooseDir));
+
+      bar.appendChild(mkBtn(HAS_FSA ? '改用下載資料夾' : '啟用（存到下載資料夾）', !HAS_FSA, useDownload));
+
+      bar.appendChild(mkBtn('先不要', false, () => { mode = 'off'; meta.mode = 'off'; saveMeta(); killBar(); }));
+
+    } else if (kind === 'prompt') {
+
+      msg.innerHTML = '<b>自動備份需要你確認一次。</b>瀏覽器重開後要重新授權存取備份資料夾' +
+
+        (meta.dirName ? '（<b>' + esc(meta.dirName) + '</b>）' : '') + '。';
+
+      bar.appendChild(mkBtn('允許並立即備份', true, regrant));
+
+      bar.appendChild(mkBtn('稍後', false, killBar));
+
+    } else if (kind === 'lost') {
+
+      msg.innerHTML = '<b>備份資料夾連不上了</b>（資料夾被搬走、刪掉，或授權已被清除）。請重新選一個。';
+
+      if (HAS_FSA) bar.appendChild(mkBtn('重新選擇', true, chooseDir));
+
+      bar.appendChild(mkBtn('改用下載資料夾', false, useDownload));
+
+      bar.appendChild(mkBtn('稍後', false, killBar));
+
+    }
+
+    document.body.appendChild(bar);
+
+    barEl = bar;
+
+  }
+
+ 
+
+  /* ---------- 使用者動作（都必須在 click 裡，FSA 要 user activation） ---------- */
+
+  async function chooseDir() {
+
+    try {
+
+      const dir = await window.showDirectoryPicker({ mode: 'readwrite', id: cfg.ns + '-backup', startIn: 'downloads' });
+
+      const perm = await dir.requestPermission({ mode: 'readwrite' });
+
+      if (perm !== 'granted') { note('沒有取得寫入權限，自動備份未啟用'); return; }
+
+ 
+
+      // 防呆二：這個資料夾裡已經有備份的話，先停下來問，不要自動蓋過去。
+
+      const found = await readBackup(dir) || await readBackup(dir, prevName());
+
+ 
+
+      dirHandle = dir;
+
+      // 存不起來（例如無痕模式擋 IndexedDB）不該讓整件事失敗：
+
+      // 這次開著的期間照樣能備份，只是下次開檔要重選。
+
+      try { await hput('dir', dir); }
+
+      catch (e) { console.warn('[AutoBackup] handle 存不起來，這次仍可備份:', e); }
+
+      mode = 'dir'; meta.mode = 'dir'; meta.dirName = dir.name;
+
+      meta.lastHash = null;                 // 換資料夾就重新寫一份
+
+      saveMeta();
+
+      killBar();
+
+ 
+
+      if (found) { askRestore(found, dir.name); return; }
+
+      const ok = await run('manual');
+
+      note(ok ? '自動備份已啟用 → ' + dir.name + ' \\ ' + fileName()
+
+              : '自動備份已啟用 → ' + dir.name + '（目前沒有資料，等有東西再寫）');
+
+    } catch (e) {
+
+      if (e.name !== 'AbortError') note('選擇資料夾失敗：' + e.message);
+
+    }
+
+  }
+
+ 
+
+  /* ---------- 這個資料夾已經有備份了：要還原、還是覆蓋？ ---------- */
+
+  async function askRestore(found, dirName) {
+
+    paused = true;                                   // 使用者決定前，一律不寫
+
+    const cur = await cfg.collect();
+
+    const curEmpty = cfg.isEmpty ? cfg.isEmpty(cur) : false;
+
+    const sum = d => (cfg.summary ? cfg.summary(d) : '（無法判讀內容）');
+
+    const at = found._backup && found._backup.at ? new Date(found._backup.at).toLocaleString()
+
+             : (found.exportedAt ? new Date(found.exportedAt).toLocaleString() : '時間不明');
+
+ 
+
+    const wrap = document.createElement('div');
+
+    wrap.style.cssText = 'position:fixed;inset:0;z-index:100001;background:rgba(0,0,0,.5);display:flex;' +
+
+      'align-items:center;justify-content:center;padding:16px';
+
+    const box = document.createElement('div');
+
+    box.style.cssText = 'background:#fff;color:#222;border-radius:10px;max-width:560px;width:100%;' +
+
+      'padding:20px;font:14px/1.7 system-ui,sans-serif;box-shadow:0 10px 40px rgba(0,0,0,.3)';
+
+    box.innerHTML =
+
+      '<h3 style="margin:0 0 12px">這個資料夾裡已經有一份備份</h3>' +
+
+      '<table style="width:100%;border-collapse:collapse;margin-bottom:12px">' +
+
+      '<tr><td style="padding:6px 0;color:#666;width:110px">資料夾</td><td><b>' + esc(dirName) + '</b></td></tr>' +
+
+      '<tr><td style="padding:6px 0;color:#666">備份檔內容</td><td><b>' + esc(sum(found)) + '</b>　<span style="color:#666">' + esc(at) + '</span></td></tr>' +
+
+      '<tr><td style="padding:6px 0;color:#666">目前畫面上</td><td><b>' + esc(sum(cur)) + '</b>' +
+
+        (curEmpty ? '　<span style="color:#b45309">（是空的）</span>' : '') + '</td></tr></table>' +
+
+      (curEmpty
+
+        ? '<p style="margin:0;padding:10px 12px;background:#ecfdf5;border-left:3px solid #10b981;border-radius:4px">' +
+
+          '目前沒有資料，備份檔裡有。看起來是<b>清除瀏覽資料之後重新設定</b>，建議<b>還原</b>把東西拿回來。</p>'
+
+        : '<p style="margin:0;padding:10px 12px;background:#fef3c7;border-left:3px solid #f59e0b;border-radius:4px">' +
+
+          '兩邊都有資料。<b>還原</b>會用備份檔覆蓋掉目前畫面上的東西；' +
+
+          '<b>保留目前的</b>則會把備份檔換成現在這份（舊的還會留在 -prev）。</p>') +
+
+      '<div id="_abRB" style="margin-top:16px;display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end"></div>';
+
+    const btns = box.querySelector('#_abRB');
+
+    const close = () => { wrap.remove(); paused = false; };
+
+ 
+
+    btns.appendChild(mkBtn('還原（用備份覆蓋目前資料）', curEmpty, async () => {
+
+      wrap.remove();
+
+      try {
+
+        await cfg.restore(found);
+
+        paused = false;
+
+        meta.lastHash = null; saveMeta();
+
+        note('已還原：' + sum(found));
+
+      } catch (e) { paused = false; note('還原失敗：' + e.message); }
+
+    }));
+
+    btns.appendChild(mkBtn('保留目前的（覆蓋備份）', !curEmpty, async () => {
+
+      wrap.remove(); paused = false;
+
+      const ok = await run('manual');
+
+      note(ok ? '已用目前資料覆蓋備份' : '沒有寫入（目前沒有資料）');
+
+    }));
+
+    btns.appendChild(mkBtn('先不要動', false, close));
+
+    wrap.appendChild(box);
+
+    document.body.appendChild(wrap);
+
+  }
+
+ 
+
+  /* ---------- 主動從備份資料夾讀回來（設定裡的「從備份還原」） ---------- */
+
+  async function restoreFromDir() {
+
+    if (mode !== 'dir' || !dirHandle) { note('尚未設定備份資料夾'); return; }
+
+    try {
+
+      const perm = await dirHandle.requestPermission({ mode: 'readwrite' });
+
+      if (perm !== 'granted') { note('未取得資料夾權限'); return; }
+
+      const found = await readBackup(dirHandle) || await readBackup(dirHandle, prevName());
+
+      if (!found) { note('備份資料夾裡找不到 ' + fileName()); return; }
+
+      askRestore(found, meta.dirName || '備份資料夾');
+
+    } catch (e) { note('讀取備份失敗：' + e.message); }
+
+  }
+
+  async function regrant() {
+
+    try {
+
+      const perm = await dirHandle.requestPermission({ mode: 'readwrite' });
+
+      if (perm !== 'granted') { note('未取得權限'); return; }
+
+      killBar();
+
+      const ok = await run('manual');
+
+      note(ok ? '已備份' : '權限拿到了，但寫入失敗');
+
+    } catch (e) { note('授權失敗：' + e.message); }
+
+  }
+
+  function useDownload() {
+
+    mode = 'download'; meta.mode = 'download'; meta.lastDay = null; meta.lastHash = null;
+
+    saveMeta(); killBar();
+
+    run('manual').then(ok => note(ok ? '已備份到下載資料夾（每天最多一個檔）' : '備份失敗'));
+
+  }
+
+  function note(m) {
+
+    if (cfg.toast) { try { cfg.toast(m); return; } catch (e) {} }
+
+    console.log('[AutoBackup]', m);
+
+  }
+
+ 
+
+  /* ---------- 設定對話框 ---------- */
+
+  function settings() {
+
+    const wrap = document.createElement('div');
+
+    wrap.style.cssText = 'position:fixed;inset:0;z-index:100000;background:rgba(0,0,0,.45);display:flex;' +
+
+      'align-items:center;justify-content:center;padding:16px';
+
+    const box = document.createElement('div');
+
+    box.style.cssText = 'background:#fff;color:#222;border-radius:10px;max-width:520px;width:100%;' +
+
+      'padding:20px;font:14px/1.7 system-ui,sans-serif;box-shadow:0 10px 40px rgba(0,0,0,.3)';
+
+    const st = mode === 'dir'
+
+        ? '資料夾模式 — <b>' + esc(meta.dirName || '?') + '</b>，固定只有 2 個檔（最新 + 前一份），不會越積越多'
+
+      : mode === 'download' ? '下載模式 — 每天最多一個檔 <b>' + esc(dayName()) + '</b>，需自行定期清理'
+
+      : mode === 'off' ? '<b>已關閉</b> — 資料只存在瀏覽器，清除瀏覽資料就沒了'
+
+      : '尚未設定';
+
+    box.innerHTML =
+
+      '<h3 style="margin:0 0 12px">自動備份</h3>' +
+
+      '<p style="margin:0 0 10px">目前狀態：' + st + '</p>' +
+
+      '<p style="margin:0 0 10px;color:#555">上次備份：' +
+
+        (meta.lastAt ? new Date(meta.lastAt).toLocaleString() + '（' + Math.round((meta.size || 0) / 1024) + ' KB）' : '從未') +
+
+      '<br>備份時機：<b>切到背景（最小化／鎖螢幕／關窗）且資料有變動 → 一定備份</b>；' +
+
+      '沒寫完的話下次開啟會補。編輯過程中則是每 ' +
+
+      Math.round((cfg.intervalMs || DAY) / 3600000) + ' 小時最多一次，免得每打一個字就寫檔。' +
+
+      '<br>想現在就備一份：按 <b>Ctrl+S</b>，或下面的「立即備份」。' +
+
+      '<br>資料是空的時候不會備份，不會把好的備份洗掉。</p>' +
+
+      '<div id="_abBtns" style="margin-top:16px;display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end"></div>';
+
+    const btns = box.querySelector('#_abBtns');
+
+    const close = () => wrap.remove();
+
+    if (HAS_FSA) btns.appendChild(mkBtn(mode === 'dir' ? '換一個資料夾…' : '選擇備份資料夾', mode !== 'dir', () => { close(); chooseDir(); }));
+
+    if (mode === 'dir') btns.appendChild(mkBtn('從備份還原…', false, () => { close(); restoreFromDir(); }));
+
+    btns.appendChild(mkBtn('改用下載資料夾', false, () => { close(); useDownload(); }));
+
+    btns.appendChild(mkBtn('立即備份', mode === 'dir', () => { run('manual').then(ok => note(ok ? '已備份' : '備份失敗或尚未設定')); close(); }));
+
+    if (mode !== 'off') btns.appendChild(mkBtn('關閉自動備份', false, () => { mode = 'off'; meta.mode = 'off'; saveMeta(); clearPending(); close(); note('已關閉自動備份'); }));
+
+    btns.appendChild(mkBtn('完成', false, close));
+
+    wrap.appendChild(box);
+
+    wrap.onclick = e => { if (e.target === wrap) close(); };
+
+    document.body.appendChild(wrap);
+
+  }
+
+ 
+
+  /* ---------- 啟動 ---------- */
+
+  async function init(c) {
+
+    cfg = c;
+
+    loadMeta();
+
+    mode = meta.mode || 'unset';
+
+ 
+
+    if (mode === 'dir') {
+
+      try {
+
+        dirHandle = await hget('dir');
+
+        if (!dirHandle) { mode = 'unset'; }          // handle 被清掉了（通常就是清除網站資料）
+
+        else {
+
+          const perm = await dirHandle.queryPermission({ mode: 'readwrite' });
+
+          if (perm !== 'granted') showBar('prompt'); // 分支 B：等使用者點一次
+
+        }
+
+      } catch (e) { mode = 'unset'; }
+
+    }
+
+    if (mode === 'unset') setTimeout(() => { if (mode === 'unset') showBar('setup'); }, 1200);
+
+ 
+
+    // 切到背景（最小化／鎖螢幕／切分頁／關窗）時：
+
+    // 先同步記旗標（一定成功），再試著當場寫檔（非同步，可能來不及）。
+
+    // 寫成功才清旗標，所以來不及也不會漏 —— 下次開啟補。
+
+    //
+
+    // 這裡刻意不看 due()：run() 裡本來就有雜湊比對，資料沒真的變就不會寫，
+
+    // due() 在這條路徑上是多餘的第二層節流，只會造成「我明明縮小了怎麼沒備份」。
+
+    // 資料夾模式固定 2 個檔，多寫幾次也不會長大。
+
+    document.addEventListener('visibilitychange', () => {
+
+      if (document.visibilityState !== 'hidden' || !dirty) return;
+
+      setPending();
+
+      run('hidden');
+
+    });
+
+    // 直接關視窗時 visibilitychange 不一定跑得到，這兩個再保險一次（都是同步的）
+
+    const markPending = () => { if (dirty) setPending(); };
+
+    window.addEventListener('pagehide', markPending);
+
+    window.addEventListener('beforeunload', markPending);
+
+ 
+
+    // 開檔後先看一次該不該備份；上次關窗沒補到的，這裡無視 24 小時節流直接補
+
+    setTimeout(() => {
+
+      if (isPending()) run('pending');
+
+      else if (due()) run('startup');
+
+    }, 3000);
+
+  }
+
+ 
+
+  // 資料變動：很便宜，可以在每次存檔都呼叫。真正寫入由 due() 節流。
+
+  function markDirty() {
+
+    dirty = true;
+
+    if (mode === 'unset' || mode === 'off') return;
+
+    if (due()) run('dirty');       // 多半在 click 事件裡被觸發 → 下載模式也有 user activation
+
+  }
+
+ 
+
+  return {
+
+    init, markDirty, settings, restoreFromDir,
+
+    now: () => run('manual'),
+
+    get mode() { return mode; }
+
+  };
+
+})();
+
+ 
+
+/* =====================================================================
+
+   啟動
+
+   ===================================================================== */
+
+data=load();
+
+autoPurge();
+
+snapshot();
+
+render();
+
+ 
+
+/* 版面偏好：要在 render() 之後套用，元素才存在 */
+
+(function(){
+
+  const u = readUI();
+
+  ui.sideHide = !!u.sideHide;
+
+  ui.dw = dnumUI(u.dw) || DW_DEF;
+
+  applySideHide();
+
+  applyDetailWidth(ui.dw);
+
+  initDetailResize();
+
+})();
+
+checkShareHash();
+
+$("#addinput").focus();
+
+ 
+
+AutoBackup.init({
+
+  ns: "todolisthtml",
+
+  appName: "Todolisthtml",
+
+  intervalMs: 86400000,                       // 每天最多備份一次
+
+  toast: m => toast(m),
+
+  collect: () => exportData(data.tasks.slice(), true),  // 與「匯出 JSON」同格式，可直接匯入
+
+  summary: d => (d.tasks||[]).length + " 個項目、" + (d.lists||[]).length + " 個清單",
+
+  isEmpty: d => !(d.tasks||[]).length && !(d.trash||[]).length,
+
+  restore: d => {                             // 用備份覆蓋目前資料（Ctrl+Z 可復原）
+
+    push();
+
+    const b = blank();
+
+    b.settings  = d.settings  ? clone(d.settings)  : b.settings;
+
+    b.lists     = (d.lists    || []).map(clone);
+
+    b.tasks     = (d.tasks    || []).map(clone);
+
+    b.trash     = (d.trash    || []).map(clone);
+
+    b.templates = (d.templates|| []).map(clone);
+
+    if(!b.lists.length) b.lists = blank().lists;
+
+    data = migrate(b);
+
+    save(); render();
+
+  }
+
+});
+
+window.addEventListener("beforeunload", ()=>{ if(saveTimer){ clearTimeout(saveTimer);
+
+  try{ localStorage.setItem(KEY, JSON.stringify(data)); }catch(e){} } });
+
+</script>
+
+</body>
+
+</html>
